@@ -12,6 +12,7 @@ This repository is based on [https://github.com/MontaEllis/Pytorch-Medical-Segme
 | 2017-05 | 3D Residual U-Net | Kisuk Lee and H. Sebastian Seung | Superhuman Accuracy on the SNEMI3D Connectomics Challenge | [arxiv](https://arxiv.org/abs/1706.00120) |
 | 2021-10 |  CSR-Net   | Cheng Chen and Ruoxiu Xiao | CSR-Net: Cross-Scale Residual Network for multi-objective scaphoid fracture segmentation | [CIBM2021](https://www.sciencedirect.com/science/article/pii/S0010482521005709) |
 | 2022 | UNETR | Ali Hatamizadeh and Daguang Xu | UNETR: Transformers for 3D Medical Image Segmentation | [CVPR2022](https://openaccess.thecvf.com/content/WACV2022/html/Hatamizadeh_UNETR_Transformers_for_3D_Medical_Image_Segmentation_WACV_2022_paper.html) |
+| 2023 | IS | Chen Cheng and Ruoxiu Xiao | Integration- and separation-aware adversarial model for cerebrovascular segmentation from TOF-MRA | [CMPB](https://www.sciencedirect.com/science/article/abs/pii/S0169260723001414)|
 
 
 ## Usage will comming soon
