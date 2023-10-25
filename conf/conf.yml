@@ -1,0 +1,29 @@
+yml_name: 'unet'
+network: 'unet'  # unet,res_unet,er_net,re_net
+#* Data Settings
+data_path: '/external_disk/CYQ/Project/medical_data/new_tof/source/'
+gt_path: '/external_disk/CYQ/Project/medical_data/new_tof/label1/'
+pred_data_path: '/external_disk/CYQ/Project/medical_data/new_tof/test/source/'
+pred_gt_path: '/external_disk/CYQ/Project/medical_data/new_tof/test/label1/'
+dataset: 'else'  # 'brats19' or 'else'
+#* Output Settings
+output_dir: 'logs/'  # checkpoint_latest save path
+save_suffix: '.mhd'  # the file format saved when training
+#* Model Settings
+in_classes: 1
+out_classes: 1
+init_type: 'none'  # ['normal', 'xavier', 'xavier_uniform', 'kaiming', 'orthogonal', 'none]
+load_mode: 0  # 0: load nothing 1: load from checkpoint 2: load from pre_trained model(supervised)
+ckpt: None
+latest_checkpoint_file: 'latest_checkpoint.pt'  # ckpt + latest_checkpoint_file determined load which ckpt file
+#* Training Settings
+aug: False  # True or False
+epochs: 100
+epochs_per_checkpoint: 25
+batch_size: 4
+init_lr: 0.01
+scheduler_step_size: 20
+scheduler_gamma: 0.8
+crop_or_pad_size: 64, 64, 64  # if 2D: 256,256,1  #USELESS
+patch_size: 64, 64, 64  # if 2D: 128,128,1
+
