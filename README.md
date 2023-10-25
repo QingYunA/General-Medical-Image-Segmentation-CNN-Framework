@@ -20,3 +20,11 @@ This repository is a general Medical image Segmentation Framework and highly bas
 
 
 ## Usage will comming soon
+
+## Related Works
+if this code is helpful for you, you can cite these for us. Thanks！
+```
+ C Chen and R Xiao. Generative consistency for semi-supervised cerebrovascular segmentation from TOF-MRA, 2022, IEEE Transactions on Medical Imaging 42 (2), 346-353
+ C Chen and R Xiao. All answers are in the images: A review of deep learning for cerebrovascular segmentation, 2023, Computerized Medical Imaging and Graphics, 102229
+ C Chen and J Zhao. Understanding the brain with attention: A survey of transformers in brain sciences, 2023, Brain-X, 1 (3): e29.
+```
