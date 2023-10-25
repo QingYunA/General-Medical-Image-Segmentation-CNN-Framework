@@ -1,7 +1,11 @@
 # A Pytorch general Medical image Segmentation Framework
-This repository is based on [https://github.com/MontaEllis/Pytorch-Medical-Segmentation](https://github.com/MontaEllis/Pytorch-Medical-Segmentation)
+The main contributors to the project are [Chen Yunqing(myself)](https://github.com/QingYunA) and [Chen Cheng](https://scholar.google.com.hk/citations?user=UIh2arMAAAAJ).
+
+This repository is a general Medical image Segmentation Framework and highly based on [https://github.com/MontaEllis/Pytorch-Medical-Segmentation](https://github.com/MontaEllis/Pytorch-Medical-Segmentation)
+
 ***
 ## The model have completed
+**If the following model has been helpful to you, we hope you can cite the corresponding reference.**
 | Publication Date | Model Name | The First and Last Authors |  Title | Reference|
 | :---: | :---: | :---: | :---: | :---: |
 | 2016-10 |  3D U-Net  | Özgün Çiçek and Ronneberger, Olaf | 3D U-Net: Learning Dense Volumetric Segmentation from Sparse Annotation | [MICCAI2016](https://link.springer.com/chapter/10.1007/978-3-319-46723-8_49)|
