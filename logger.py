@@ -5,6 +5,7 @@ import sys
 import logging
 import functools
 from termcolor import colored
+from rich.logging import RichHandler
 
 
 @functools.lru_cache()
@@ -17,13 +18,16 @@ def create_logger(output_dir, dist_rank=0, name=''):
     # create formatter
     fmt = '[%(asctime)s %(name)s] (%(filename)s %(lineno)d): %(levelname)s %(message)s'
     color_fmt = colored('[%(asctime)s %(name)s]', 'green') + \
-                colored('(%(filename)s %(lineno)d)', 'yellow') + ': %(levelname)s %(message)s'
+        colored('(%(filename)s %(lineno)d)', 'yellow') + ': %(levelname)s %(message)s'
 
     # create console handlers for master process
     if dist_rank == 0:
-        console_handler = logging.StreamHandler(sys.stdout)
-        console_handler.setLevel(logging.DEBUG)
-        console_handler.setFormatter(logging.Formatter(fmt=color_fmt, datefmt='%Y-%m-%d %H:%M:%S'))
+        # console_handler = logging.StreamHandler(sys.stdout)
+        # console_handler.setLevel(logging.DEBUG)
+        # console_handler.setFormatter(logging.Formatter(fmt=color_fmt, datefmt='%Y-%m-%d %H:%M:%S'))
+
+        # rich handlers
+        console_handler = RichHandler()
         logger.addHandler(console_handler)
 
     # create file handlers
@@ -45,7 +49,7 @@ def metrics_logger(output_dir, name=''):
     # create formatter
     fmt = '[%(asctime)s %(name)s] (%(filename)s %(lineno)d): %(levelname)s %(message)s'
     color_fmt = colored('[%(asctime)s %(name)s]', 'green') + \
-                colored('(%(filename)s %(lineno)d)', 'yellow') + ': %(levelname)s %(message)s'
+        colored('(%(filename)s %(lineno)d)', 'yellow') + ': %(levelname)s %(message)s'
 
     # create console handlers for master process
     console_handler = logging.StreamHandler(sys.stdout)

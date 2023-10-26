@@ -158,8 +158,9 @@ def train(model, args, logger):
     epoch_tqdm = progress.add_task(description='[red]epoch progress', total=epochs)
     batch_tqdm = progress.add_task(description='[green]batch progress', total=len(train_loader))
 
+    progress.start()
     for epoch in range(1, epochs + 1):
-        progress.start()
+        progress.update(epoch_tqdm, completed=epoch)
         epoch += elapsed_epochs
 
         num_iters = 0
@@ -171,6 +172,7 @@ def train(model, args, logger):
         train_loader.sampler.set_epoch(epoch)  # ! must set epoch for DistributedSampler!
         for i, batch in enumerate(train_loader):
             with torch.autograd.set_detect_anomaly(True):
+                progress.update(batch_tqdm, completed=i)
                 train_start = time.time()
                 load_time = time.time() - load_start
                 optimizer.zero_grad()
@@ -195,7 +197,6 @@ def train(model, args, logger):
 
             num_iters += 1
             iteration += 1
-            progress.advance(batch_tqdm, advance=1)
 
             # * calculate metrics
             # TODO use reduce to sum up all rank's calculation results
@@ -247,18 +248,17 @@ def train(model, args, logger):
             # f'{BLUE}Specificity:{END} {spe_meter.val}\n')
 
             load_start = time.time()
+            progress.refresh()
         # reset batchtqdm
-        progress.advance(epoch_tqdm, advance=1)
-        progress.reset(batch_tqdm)
 
         if (conf.use_scheduler):
             scheduler.step()
-            logger.info(f'{BLUE}Learning rate:{END} {scheduler.get_last_lr()[0]}')
+            logger.info(f'{BLUE}Learning rate: {END} {scheduler.get_last_lr()[0]}')
 
         # * one epoch logger
-        logger.info(f'\n{BLUE}Epoch {epoch} used time:{END} {load_meter.sum+train_time.sum:.3f} s\n'
-                    f'{BLUE}Loss Avg:{END} {loss_meter.avg}\n'
-                    f'{BLUE}Dice Avg:{END} {dice_meter.avg}\n')
+        logger.info(f'\n{BLUE}Epoch {epoch} used time: {END} {load_meter.sum+train_time.sum:.3f} s\n'
+                    f'{BLUE}Loss Avg: {END} {loss_meter.avg}\n'
+                    f'{BLUE}Dice Avg: {END} {dice_meter.avg}\n')
         # f'{BLUE}Recall Avg:{END} {recall_meter.avg}\n'
         # f'{BLUE}Specificity Avg:{END} {spe_meter.avg}\n')
 

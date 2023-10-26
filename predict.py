@@ -79,10 +79,12 @@ def predict(model, conf, logger):
     jaccard_ls, dice_ls = [], []
 
     file_tqdm = progress.add_task("[red]Predicting file", total=len(dataset))
-    batch_tqdm = progress.add_task("[blue]file batch", total=len(dataset))
+    batch_tqdm = progress.add_task("[blue]file batch", total=None)
 
+    # start progess
+    progress.start()
     for i, item in enumerate(dataset):
-        progress.start()
+        progress.update(file_tqdm, completed=i)
         item = znorm(item)
         grid_sampler = tio.inference.GridSampler(item, patch_size=(conf.patch_size), patch_overlap=(4, 4, 36))
         affine = item['source']['affine']
@@ -97,8 +99,8 @@ def predict(model, conf, logger):
         pred_aggregator = tio.inference.GridAggregator(grid_sampler)
         gt_aggregator = tio.inference.GridAggregator(grid_sampler)
         with torch.no_grad():
-            for batch in progress.track(patch_loader, total=len(patch_loader), description='Predicting file {}'.format(i)):
-                progress.start()
+            for j, batch in enumerate(patch_loader):
+                progress.update(file_tqdm, completed=j)
                 locations = batch[tio.LOCATION]
 
                 x = process_x(conf, batch)
@@ -114,10 +116,8 @@ def predict(model, conf, logger):
 
                 pred_aggregator.add_batch(mask, locations)
                 gt_aggregator.add_batch(gt, locations)
-                progress.advance(batch_tqdm, advance=1)
+                progress.refresh()
             # reset batchtqdm
-            progress.advance(file_tqdm, advance=1)
-            progress.reset(batch_tqdm)
             pred_t = pred_aggregator.get_output_tensor()
             gt_t = gt_aggregator.get_output_tensor()
 
@@ -128,14 +128,15 @@ def predict(model, conf, logger):
             jaccard, dice = metric(gt_t, pred_t)
             jaccard_ls.append(jaccard)
             dice_ls.append(dice)
-            logger.info(f'\njaccard:{jaccard}'
-                        f'\ndice:{dice}')
+            logger.info(f'File {i} metrics: '
+                        f'\njaccard: {jaccard}'
+                        f'\ndice: {dice}')
     save_csv(jaccard_ls, dice_ls)
     jaccard_mean = np.mean(jaccard_ls)
     dice_mean = np.mean(dice_ls)
     # print('-' * 40)
-    logger.info(f'\njaccard_mean:{jaccard_mean}'
-                f'\ndice_mean:{dice_mean}')
+    logger.info(f'\njaccard_mean: {jaccard_mean}'
+                f'\ndice_mean: {dice_mean}')
 
 
 def save_csv(jaccard_ls, dice_ls):
