@@ -18,8 +18,75 @@ This repository is a general Medical image Segmentation Framework and highly bas
 | 2022 | UNETR | Ali Hatamizadeh and Daguang Xu | UNETR: Transformers for 3D Medical Image Segmentation | [CVPR2022](https://openaccess.thecvf.com/content/WACV2022/html/Hatamizadeh_UNETR_Transformers_for_3D_Medical_Image_Segmentation_WACV_2022_paper.html) |
 | 2023 | IS | Chen Cheng and Ruoxiu Xiao | Integration- and separation-aware adversarial model for cerebrovascular segmentation from TOF-MRA | [CMPB](https://www.sciencedirect.com/science/article/abs/pii/S0169260723001414)|
 
+## Usage
 
-## Usage will comming soon
+### Requirements
+
+The recommend python and package version:
+
+* python 3.10.0
+* pytorch 1.13.1 (do not use torch2.0, it will cause program failed to start)
+
+### Train
+
+here we use an example(Traning 3D Unet) to teach you how use this repository
+
+```BASH
+torcnrun --nproc_per_node 1 --master_port 12345 train.py --gpus 0 -o ./logs/3d-unet --conf ./conf/unet.yml
+```
+
+**torchrun args**
+
+`nproc_per_node` : depends on your gpu nums(e.g. if you have 4 gpus in one machine, set it to `4` )
+
+`master_port` : the port address this program used, it can set freely
+
+**train args**
+
+
+in the most of situations, you will only used these args below:
+`--gpus` : specify gpu you wanna used.(e.g. if you have 4 gpus, but you only wanna use gpu 0 and gpu 3 , set it to `0,3` )
+
+`-o` : the output directory of logs (include checkpoint file, terminal logs etc. )
+
+`--conf` : specify the configuration you wanna use.
+
+### Predict
+
+run the code
+
+```BASH
+torcnrun --nproc_per_node 1 --masaer_port 12345 predict.py --gpus 0 -o ./results/3d-unet --conf ./conf/unet.yml -k ./logs/3d-unet
+```
+
+**predict args**
+
+`-o` : the output directory of prediction results (include metrics.csv, result file, terminal logs)
+
+`-k`: load model from this path
+
+## Create your own configuration
+
+create new file in path `/conf/`, file name ends with `.yml`.
+
+For example, if you wanna use 3D Vnet, you can create `vnet.yml`, and then set all parameters you wanna set.
+
+**how to use the parameters in `yml` file**
+
+`conf.PARAM`: replace `PARAM` with the parameters you wanna use
+
+### Modify train.py and predict.py to find your model
+
+in train.py, add these codes after the last model
+
+```Python
+elif conf.network == 'NETWORK':
+    from models.three_d.NETWORK import NETWORK
+    model = NETWORK()
+```
+
+`NETWORK`: means the network you wanna use
+![](https://s2.loli.net/2023/10/26/LEQt8p7TufXxqyb.png)
 
 ## Related Works
 if this code is helpful for you, you can cite these for us. Thanks！
