@@ -1,10 +1,10 @@
 yml_name: 'unet'
 network: 'unet'  # unet,res_unet,er_net,re_net
 #* Data Settings
-data_path: '/external_disk/CYQ/Project/medical_data/new_tof/source/'
-gt_path: '/external_disk/CYQ/Project/medical_data/new_tof/label1/'
-pred_data_path: '/external_disk/CYQ/Project/medical_data/new_tof/test/source/'
-pred_gt_path: '/external_disk/CYQ/Project/medical_data/new_tof/test/label1/'
+data_path: '/disk/cyq/tof_data/train/source/'
+gt_path: '/disk/cyq/tof_data/train/label1/'
+pred_data_path: '/disk/cyq/tof_data/test/source/'
+pred_gt_path: '/disk/cyq/tof_data/test/label1/'
 dataset: 'else'  # 'brats19' or 'else'
 #* Output Settings
 output_dir: 'logs/'  # checkpoint_latest save path

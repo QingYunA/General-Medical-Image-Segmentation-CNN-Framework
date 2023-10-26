@@ -22,10 +22,6 @@ from rich.progress import (
 
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'  # ! solve warning
 
-BLUE = '\033[94m'
-YELLOW = '\033[93m'
-END = '\033[0m'
-
 
 def weights_init_normal(init_type):
 
@@ -156,7 +152,7 @@ def train(model, args, logger):
     iteration = elapsed_epochs * len(train_loader)
 
     epoch_tqdm = progress.add_task(description='[red]epoch progress', total=epochs)
-    batch_tqdm = progress.add_task(description='[green]batch progress', total=len(train_loader))
+    batch_tqdm = progress.add_task(description='[blue]batch progress', total=len(train_loader))
 
     progress.start()
     for epoch in range(1, epochs + 1):
@@ -172,7 +168,7 @@ def train(model, args, logger):
         train_loader.sampler.set_epoch(epoch)  # ! must set epoch for DistributedSampler!
         for i, batch in enumerate(train_loader):
             with torch.autograd.set_detect_anomaly(True):
-                progress.update(batch_tqdm, completed=i)
+                progress.update(batch_tqdm, completed=i+1)
                 train_start = time.time()
                 load_time = time.time() - load_start
                 optimizer.zero_grad()
@@ -192,6 +188,7 @@ def train(model, args, logger):
 
                 loss = criterion(pred, gt)
                 loss.backward()
+                progress.refresh()
 
             optimizer.step()
 
@@ -244,23 +241,22 @@ def train(model, args, logger):
             logger.info(f'\nEpoch: {epoch} Batch: {i}, data load time: {load_meter.val:.3f}s , train time: {train_time.val:.3f}s\n'
                         f'Loss: {loss_meter.val}\n'
                         f'Dice: {dice_meter.val}\n')
-            # f'{BLUE}Recall:{END} {recall_meter.val}\n'
-            # f'{BLUE}Specificity:{END} {spe_meter.val}\n')
+            # f'Recall: {recall_meter.val}\n'
+            # f'Specificity: {spe_meter.val}\n')
 
             load_start = time.time()
-            progress.refresh()
         # reset batchtqdm
 
         if (conf.use_scheduler):
             scheduler.step()
-            logger.info(f'{BLUE}Learning rate: {END} {scheduler.get_last_lr()[0]}')
+            logger.info(f'Learning rate:  {scheduler.get_last_lr()[0]}')
 
         # * one epoch logger
-        logger.info(f'\n{BLUE}Epoch {epoch} used time: {END} {load_meter.sum+train_time.sum:.3f} s\n'
-                    f'{BLUE}Loss Avg: {END} {loss_meter.avg}\n'
-                    f'{BLUE}Dice Avg: {END} {dice_meter.avg}\n')
-        # f'{BLUE}Recall Avg:{END} {recall_meter.avg}\n'
-        # f'{BLUE}Specificity Avg:{END} {spe_meter.avg}\n')
+        logger.info(f'\nEpoch {epoch} used time:  {load_meter.sum+train_time.sum:.3f} s\n'
+                    f'Loss Avg:  {loss_meter.avg}\n'
+                    f'Dice Avg:  {dice_meter.avg}\n')
+        # f'Recall Avg: {recall_meter.avg}\n'
+        # f'Specificity Avg: {spe_meter.avg}\n')
 
         # Store latest checkpoint in each epoch
         scheduler_dict = scheduler.state_dict() if conf.use_scheduler else None
@@ -339,7 +335,7 @@ if __name__ == '__main__':
     logger = create_logger(output_dir=conf.output_dir, dist_rank=0 if torch.cuda.device_count() == 1 else dist.get_rank(), name='train')
     info = '\nParameter Settings:\n'
     for k, v in conf.items():
-        info += f"{BLUE}{k}{END}: {v}\n"
+        info += f"{k}: {v}\n"
     logger.info(info)
 
     train(model, conf, logger)

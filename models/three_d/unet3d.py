@@ -2,7 +2,7 @@ import numpy as np
 from collections import OrderedDict
 import torch
 import torch.nn as nn
-from sync_batchnorm import SynchronizedBatchNorm3d
+# from sync_batchnorm import SynchronizedBatchNorm3d
 # from torchsummary import summary
 
 
@@ -29,7 +29,7 @@ class UNet3D(nn.Module):
         self.upconv4 = nn.ConvTranspose3d(
             features * 16, features * 8, kernel_size=2, stride=2
         )
-        self.decoder4 = UNet3D._block((features * 8) * 2 , features * 8, name="dec4")
+        self.decoder4 = UNet3D._block((features * 8) * 2, features * 8, name="dec4")
         self.upconv3 = nn.ConvTranspose3d(
             features * 8, features * 4, kernel_size=2, stride=2
         )
@@ -75,7 +75,7 @@ class UNet3D(nn.Module):
         return nn.Sequential(
             OrderedDict(
                 [
-                    ( 
+                    (
                         name + "conv1",
                         nn.Conv3d(
                             in_channels=in_channels,
@@ -85,7 +85,7 @@ class UNet3D(nn.Module):
                             bias=True,
                         ),
                     ),
-                    (name + "norm1", SynchronizedBatchNorm3d(num_features=features)),
+                    (name + "norm1", nn.BatchNorm3d(num_features=features)),
                     (name + "relu1", nn.ReLU(inplace=True)),
                     (
                         name + "conv2",
@@ -97,10 +97,8 @@ class UNet3D(nn.Module):
                             bias=True,
                         ),
                     ),
-                    (name + "norm2", SynchronizeBatchNorm3d(num_features=features)),
+                    (name + "norm2", nn.BatchNorm3d(num_features=features)),
                     (name + "relu2", nn.ReLU(inplace=True)),
                 ]
             )
         )
-
-

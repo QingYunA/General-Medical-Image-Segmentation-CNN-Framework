@@ -84,7 +84,7 @@ def predict(model, conf, logger):
     # start progess
     progress.start()
     for i, item in enumerate(dataset):
-        progress.update(file_tqdm, completed=i)
+        progress.update(file_tqdm, completed=i+1)
         item = znorm(item)
         grid_sampler = tio.inference.GridSampler(item, patch_size=(conf.patch_size), patch_overlap=(4, 4, 36))
         affine = item['source']['affine']
@@ -100,7 +100,7 @@ def predict(model, conf, logger):
         gt_aggregator = tio.inference.GridAggregator(grid_sampler)
         with torch.no_grad():
             for j, batch in enumerate(patch_loader):
-                progress.update(file_tqdm, completed=j)
+                progress.update(file_tqdm, completed=j+1)
                 locations = batch[tio.LOCATION]
 
                 x = process_x(conf, batch)
@@ -128,7 +128,7 @@ def predict(model, conf, logger):
             jaccard, dice = metric(gt_t, pred_t)
             jaccard_ls.append(jaccard)
             dice_ls.append(dice)
-            logger.info(f'File {i} metrics: '
+            logger.info(f'File {i+1} metrics: '
                         f'\njaccard: {jaccard}'
                         f'\ndice: {dice}')
     save_csv(jaccard_ls, dice_ls)
