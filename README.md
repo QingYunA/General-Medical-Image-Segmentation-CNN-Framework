@@ -73,7 +73,7 @@ create new file in path `/conf/`, file name ends with `.yml`.
 
 For example, if you wanna use 3D Vnet, you can create `vnet.yml`, and then set all parameters you wanna set.
 
-**how to use the parameters in `yml` file**
+### how to use the parameters in `yml` file
 
 `conf.PARAM`: replace `PARAM` with the parameters you wanna use
 
