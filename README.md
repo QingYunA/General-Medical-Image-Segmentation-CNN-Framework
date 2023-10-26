@@ -3,6 +3,8 @@ The main contributors to the project are [Chen Yunqing(myself)](https://github.c
 
 This repository is a general Medical image Segmentation Framework and highly based on [https://github.com/MontaEllis/Pytorch-Medical-Segmentation](https://github.com/MontaEllis/Pytorch-Medical-Segmentation)
 
+中文说明: [ZH_README](https://github.com/QingYunA/General-Medical-Image-Segmentation-CNN-Framework/blob/main/ZH_README.md)
+
 ***
 ## The model have completed
 **If the following model has been helpful to you, we hope you can cite the corresponding reference.**
