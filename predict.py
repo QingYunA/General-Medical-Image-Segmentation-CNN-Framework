@@ -100,7 +100,7 @@ def predict(model, conf, logger):
         gt_aggregator = tio.inference.GridAggregator(grid_sampler)
         with torch.no_grad():
             for j, batch in enumerate(patch_loader):
-                progress.update(file_tqdm, completed=j+1)
+                progress.update(batch_tqdm, completed=j+1)
                 locations = batch[tio.LOCATION]
 
                 x = process_x(conf, batch)
