@@ -1,0 +1,15 @@
+name: "unet"
+network: "unet"
+#* Output Settings
+output_dir: './logs/${config.name}'  # checkpoint_latest save path
+save_suffix: '.mhd'  # the file format saved when training
+#* Model Settings
+in_classes: 1
+out_classes: 2
+load_mode: 0  # 0: load nothing 1: load from checkpoint 2: load from pre_trained model(supervised)
+ckpt: None
+latest_checkpoint_file: 'latest_checkpoint.pt'  # ckpt + latest_checkpoint_file determined load which ckpt file
+#* Training Settings
+crop_or_pad_size: 64, 64, 64  # if 2D: 256,256,1  #USELESS
+patch_size: 64, 64, 64  # if 2D: 128,128,1
+

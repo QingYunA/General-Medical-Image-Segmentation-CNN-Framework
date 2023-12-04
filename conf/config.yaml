@@ -1,0 +1,27 @@
+defaults:
+  - _self_
+  - config: unet
+
+hydra:
+  run:
+    dir: ${config.output_dir}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+
+config:
+  data_path: '/nvme/tof_data/train/source/'
+  gt_path: '/nvme/tof_data/train/label1/'
+  pred_data_path: '/nvme/tof_data/test/source/'
+  pred_gt_path: '/nvme/tof_data/test/label1/'
+  init_type: 'none'  # ['normal', 'xavier', 'xavier_uniform', 'kaiming', 'orthogonal', 'none]
+  aug: False  # True or False
+  epochs: 100
+  epochs_per_checkpoint: 25
+  batch_size: 4
+  init_lr: 0.01
+  scheduler_step_size: 20
+  scheduler_gamma: 0.8
+  cudnn_enabled: True
+  cudnn_benchmark: True
+  use_scheduler: True
+  
+  job_name: ${hydra:job.name}
+  hydra_path: ${hydra:runtime.output_dir}
