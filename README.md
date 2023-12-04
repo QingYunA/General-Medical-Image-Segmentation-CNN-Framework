@@ -34,55 +34,76 @@ The recommend python and package version:
 here we use an example(Traning 3D Unet) to teach you how use this repository
 
 ```BASH
-torcnrun --nproc_per_node 1 --master_port 12345 train.py --gpus 0 -o ./logs/3d-unet --conf ./conf/unet.yml
+python train.py config=unet
 ```
+To specify the folder name for the current save, you can modify the corresponding parameter using config.XXX=XXX.
+```BASH
+python train.py config=unet config.name=unet-1
+```
+All files during the model training process will be saved in ./logs/unet-1
 
-**torchrun args**
+all parameter can be setted in `conf/unet.yaml`
+#### Global configuration
+Considering that many settings are common to all configuration files, such as `data_path`, `num_epochs`, etc., to avoid repetitive work, we have placed these common parameters in `conf/config.yaml`. All configuration files will have these properties from `config.yaml`.
 
-`nproc_per_node` : depends on your gpu nums(e.g. if you have 4 gpus in one machine, set it to `4` )
+Taking `num_workers` (defaulted to 18 in `config.yaml`) as an example, the priority of parameter overriding is as follows:
+Command line argument `config.num_workers=20` > `num_workers=18` in `data_3d.yaml` > Default value `num_workers=18` in `config.yaml`.
 
-`master_port` : the port address this program used, it can set freely
-
-**train args**
-
-
-in the most of situations, you will only used these args below:
-`--gpus` : specify gpu you wanna used.(e.g. if you have 4 gpus, but you only wanna use gpu 0 and gpu 3 , set it to `0,3` )
-
-`-o` : the output directory of logs (include checkpoint file, terminal logs etc. )
-
-`--conf` : specify the configuration you wanna use.
-
+#### File Structure
+Traning logs will be saved like this:
+```
+./logs/ying_tof (Corresponding saved folder: ./logs/config.name)
+└── 2023-11-24 (Date: year-month-day)
+    └── 17-05-02 (Time: hour-minute-second)
+        ├── .hydra (Configuration save files)
+        │   ├── config.yaml (Configuration for this running)
+        │   ├── hydra.yaml
+        │   └── overrides.yaml
+        ├── train_3d.log (Log during training)
+        └── train_tensorboard (Tensorboard folder)
+            └── events.out.tfevents.1700816703.medai.115245.0 (file for Tensorboard)
+```
 ### Predict
 
 run the code
 
 ```BASH
-torcnrun --nproc_per_node 1 --masaer_port 12345 predict.py --gpus 0 -o ./results/3d-unet --conf ./conf/unet.yml -k ./logs/3d-unet
+python predict.py config=unet config.ckpt=XXX
+```
+`WARNING`: ckpt must be the absolute path of the model, not the relative path
+```
+./results/ (Root folder for results)
+└── unet (Model name: unet)
+    └── 2023-12-04 (Date: year-month-day)
+        └── 17-39-30 (Time: hour-minute-second)
+            ├── metrics.csv (CSV file containing metrics)
+            ├── pred_file (Folder for prediction files)
+            │   ├── pred-0000.mhd (Prediction file 0 in MHD format)
+            │   ├── pred-0000.zraw (Prediction file 0 in ZRAW format)
+            │   ├── pred-0001.mhd (Prediction file 1 in MHD format)
+            │   ├── pred-0001.zraw (Prediction file 1 in ZRAW format)
+            │   ├── pred-0002.mhd (Prediction file 2 in MHD format)
+            │   └── ... (Additional prediction files)
+            └── predict.log (Log file for prediction)
 ```
 
-**predict args**
-
-`-o` : the output directory of prediction results (include metrics.csv, result file, terminal logs)
-
-`-k`: load model from this path
 
 ## Create your own configuration
 
-create new file in path `/conf/`, file name ends with `.yml`.
+create new file in path `/conf/config`, file name ends with `.yaml`.
 
-For example, if you wanna use 3D Vnet, you can create `vnet.yml`, and then set all parameters you wanna set.
+For example, if you wanna use 3D Vnet, you can create `vnet.yaml`, and then set all parameters you wanna set.
 
-### how to use the parameters in `yml` file
+### how to use the parameters in `yaml` file
 
-`conf.PARAM`: replace `PARAM` with the parameters you wanna use
+`config.PARAM`: replace `PARAM` with the parameters you wanna use
 
 ### Modify train.py and predict.py to find your model
 
 in train.py, add these codes after the last model
 
 ```Python
-elif conf.network == 'NETWORK':
+elif config.network == 'NETWORK':
     from models.three_d.NETWORK import NETWORK
     model = NETWORK()
 ```
