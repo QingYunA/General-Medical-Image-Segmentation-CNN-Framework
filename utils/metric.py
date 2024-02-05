@@ -3,25 +3,36 @@ from pathlib import Path
 import torch
 import numpy as np
 import copy
+from monai.metrics import compute_hausdorff_distance
 
 
 def all_metric(gt, wt_pred, et_pred, tc_pred):
     wt_dice, wt_recall, wt_specificity, wt_hs95 = metric(gt[0], wt_pred)
     et_dice, et_recall, et_specificity, et_hs95 = metric(gt[1], et_pred)
     tc_dice, tc_recall, tc_specificity, tc_hs95 = metric(gt[2], tc_pred)
-    return [wt_dice, wt_recall, wt_specificity, wt_hs95], [et_dice, et_recall, et_specificity, et_hs95], [tc_dice, tc_recall, tc_specificity, tc_hs95]
+    return (
+        [wt_dice, wt_recall, wt_specificity, wt_hs95],
+        [et_dice, et_recall, et_specificity, et_hs95],
+        [tc_dice, tc_recall, tc_specificity, tc_hs95],
+    )
 
 
-def metric(gt, pred):
-    #* input shape: (batch, channel, height, width)
-    gt = gt.squeeze()  # (240,240)
-    pred = pred.squeeze()  # (240,240)
+def metric(gt, pred, spacing=None):
+    # * input shape: (batch, channel, height, width)
 
     preds = pred.detach().numpy()
     gts = gt.detach().numpy()
 
     pred = preds.astype(int)  # float data does not support bit_and and bit_or
     gdth = gts.astype(int)  # float data does not support bit_and and bit_or
+
+    if spacing:
+        pred = pred[None, :, :, :, :]
+        gdth = gdth[None, :, :, :, :]
+        hs95 = compute_hausdorff_distance(pred, gdth, percentile=95, spacing=spacing).numpy()[0][0]
+
+    gdth = gdth.squeeze()  # (240,240)
+    pred = pred.squeeze()  # (240,240)
     fp_array = copy.deepcopy(pred)  # keep pred unchanged
     fn_array = copy.deepcopy(gdth)
     gdth_sum = np.sum(gdth)
@@ -58,7 +69,10 @@ def metric(gt, pred):
     # hs95 = hausdorff_95(gdth, pred, (1, 1))
     # hs95 = hausdorff_95(preds, gts, (1, 1, 1))
 
-    return jaccard, dice
+    if spacing:
+        return precision, recall, jaccard, dice, hs95
+    else:
+        return jaccard, dice
 
 
 # def hausdorff_95(gt_array, pred_array, spacing):

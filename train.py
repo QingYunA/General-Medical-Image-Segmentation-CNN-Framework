@@ -186,7 +186,6 @@ def train(config, model, logger):
                 mask = pred.argmax(dim=1, keepdim=True)  # * [bs,1,h,w,d]
 
                 # *  pred -> mask (0 or 1)
-                # mask = torch.sigmoid(pred.clone())  # TODO should use softmax, because it returns two probability (sum = 1)
                 # mask[mask > 0.5] = 1
                 # mask[mask <= 0.5] = 0
 

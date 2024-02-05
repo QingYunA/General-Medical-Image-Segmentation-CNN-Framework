@@ -72,7 +72,7 @@ def predict(model, config, logger):
     dataset = Dataset(config).subjects  # ! notice in predict.py should use Dataset(conf).subjects
     znorm = ZNormalization()
 
-    jaccard_ls, dice_ls = [], []
+    pre_ls, rec_ls, jaccard_ls, dice_ls, hs95_ls = [], [], [], [], []
 
     file_tqdm = progress.add_task("[red]Predicting file", total=len(dataset))
 
@@ -85,6 +85,7 @@ def predict(model, config, logger):
         item = znorm(item)
         grid_sampler = tio.inference.GridSampler(item, patch_size=(config.patch_size), patch_overlap=(4, 4, 36))
         affine = item["source"]["affine"]
+        spacing = item.spacing
         # * dist sampler
         # dist_sampler = torch.utils.data.distributed.DistributedSampler(grid_sampler, shuffle=True)
 
@@ -130,24 +131,52 @@ def predict(model, config, logger):
             save_mhd(pred_t, affine, i, config)
 
             # * calculate metrics
-            jaccard, dice = metric(gt_t, pred_t)
+            precision, recall, jaccard, dice, hs95 = metric(gt_t, pred_t, spacing)
+            pre_ls.append(precision)
+            rec_ls.append(recall)
             jaccard_ls.append(jaccard)
             dice_ls.append(dice)
-            logger.info(f"File {i+1} metrics: " f"\njaccard: {jaccard}" f"\ndice: {dice}")
+            hs95_ls.append(hs95)
+            logger.info(
+                f"File {i+1} metrics: "
+                f"\nprecision: {precision}"
+                f"\nrecall: {recall}"
+                f"\njaccard: {jaccard}"
+                f"\ndice: {dice}"
+                f"\nhs95: {hs95}"
+            )
         progress.update(file_tqdm, completed=i + 1)
-    save_csv(jaccard_ls, dice_ls, config)
-    jaccard_mean = np.mean(jaccard_ls)
-    dice_mean = np.mean(dice_ls)
-    # print('-' * 40)
-    logger.info(f"\njaccard_mean: {jaccard_mean}" f"\ndice_mean: {dice_mean}")
+    save_csv(pre_ls, rec_ls, jaccard_ls, dice_ls, hs95_ls, config)
+    pre_mean, rec_mean, jaccard_mean, dice_mean, hs95_mean = (
+        np.mean(pre_ls),
+        np.mean(rec_ls),
+        np.mean(jaccard_ls),
+        np.mean(dice_ls),
+        np.mean(hs95_ls),
+    )
+    logger.info(
+        f"\nprecision_mean: {pre_mean}"
+        f"\nrecall_mean: {rec_mean}"
+        f"\njaccard_mean: {jaccard_mean}"
+        f"\ndice_mean: {dice_mean}"
+        f"\nhs95_mean: {hs95_mean}"
+    )
 
 
-def save_csv(jaccard_ls, dice_ls, config):
+def save_csv(pre_ls, rec_ls, jaccard_ls, dice_ls, hs95_ls, config):
     import pandas as pd
 
-    data = {"jaccard": jaccard_ls, "dice": dice_ls}
+    # data = {"jaccard": jaccard_ls, "dice": dice_ls}
+    data = {"precision": pre_ls, "recall": rec_ls, "jaccard": jaccard_ls, "dice": dice_ls, "hs95": hs95_ls}
     df = pd.DataFrame(data)
-    df.loc[len(df)] = [df.iloc[:, 0].mean(), df.iloc[:, 1].mean()]
+    # df.loc[len(df)] = [df.iloc[:, 0].mean(), df.iloc[:, 1].mean()]
+    df.loc[len(df)] = [
+        df.iloc[:, 0].mean(),
+        df.iloc[:, 1].mean(),
+        df.iloc[:, 2].mean(),
+        df.iloc[:, 3].mean(),
+        df.iloc[:, 4].mean(),
+    ]
     save_path = os.path.join(config.hydra_path, "metrics.csv")
     df.to_csv(save_path, index=False)
 
