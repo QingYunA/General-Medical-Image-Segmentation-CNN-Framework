@@ -4,7 +4,7 @@ defaults:
 
 hydra:
   run:
-    dir: ${config.output_dir}/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    dir: ${config.output_dir}/${hydra:job.name}-${now:%Y-%m-%d}/${now:%H-%M-%S}
 
 config:
   data_path: '/nvme/tof_data/train/source/'

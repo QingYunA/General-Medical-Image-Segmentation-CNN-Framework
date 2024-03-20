@@ -191,7 +191,6 @@ def save_mhd(pred, affine, index, config):
 @hydra.main(config_path="conf", config_name="config")
 def main(config):
     config = config["config"]
-    config.hydra_path = config.hydra_path.replace("logs", "results")
 
     if isinstance(config.patch_size, str):
         assert (
@@ -224,8 +223,6 @@ def main(config):
 
     predict(model, config, logger)
     logger.info(f"tensorboard file saved in:{config.hydra_path}")
-    # TODO 取巧，通过删除文件夹的方式消除重复出现的文件夹
-    shutil.rmtree(hydra.core.hydra_config.HydraConfig.get().runtime.output_dir)
 
 
 if __name__ == "__main__":
