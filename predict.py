@@ -10,9 +10,8 @@ from torchio.transforms import (
 from tqdm import tqdm
 from utils.metric import metric
 from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR, CosineAnnealingLR
-from process_input import process_x, process_gt
 import numpy as np
-from logger import create_logger
+from utils.logger import create_logger
 from utils import yaml_read
 from utils.conf_base import Default_Conf
 from rich.progress import (
@@ -106,9 +105,9 @@ def predict(model, config, logger):
             for j, batch in enumerate(patch_loader):
                 locations = batch[tio.LOCATION]
 
-                x = process_x(config, batch)
+                x = batch["source"]["data"](config, batch)
                 x = x.type(torch.FloatTensor).to(accelerator.device)
-                gt = process_gt(config, batch)
+                gt = batch["gt"]["data"](config, batch)
                 gt = gt.type(torch.FloatTensor).to(accelerator.device)
 
                 pred = model(x)

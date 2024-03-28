@@ -96,7 +96,7 @@ def train(config, model, logger):
     optimizer = torch.optim.Adam(model.parameters(), lr=config.init_lr)
 
     # * set loss function
-    from loss_function import Binary_Loss, DiceLoss, cross_entropy_3D
+    from utils.loss_function import Binary_Loss, DiceLoss, cross_entropy_3D
 
     criterion = Binary_Loss()
     # dice_criterion = DiceLoss().cuda()
