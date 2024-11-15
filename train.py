@@ -171,8 +171,8 @@ def train(config, model, logger):
                 load_time = time.time() - load_start
                 optimizer.zero_grad()
 
-                x = batch["source"]["data"](config, batch)  # * from batch extract x:[bs,4 or 1,h,w,d]
-                gt = batch["gt"]["data"](config, batch)  # * from batch extract gt:[bs,4 or 1,h,w,d]
+                x = batch["source"]["data"]  # * from batch extract x:[bs,4 or 1,h,w,d]
+                gt = batch["gt"]["data"]  # * from batch extract gt:[bs,4 or 1,h,w,d]
                 gt_back = torch.zeros_like(gt)
                 gt_back[gt == 0] = 1
                 gt = torch.cat([gt_back, gt], dim=1)  # * [bs,2,h,w,d]
