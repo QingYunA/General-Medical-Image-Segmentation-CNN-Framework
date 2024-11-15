@@ -105,9 +105,9 @@ def predict(model, config, logger):
             for j, batch in enumerate(patch_loader):
                 locations = batch[tio.LOCATION]
 
-                x = batch["source"]["data"](config, batch)
+                x = batch["source"]["data"]
                 x = x.type(torch.FloatTensor).to(accelerator.device)
-                gt = batch["gt"]["data"](config, batch)
+                gt = batch["gt"]["data"]
                 gt = gt.type(torch.FloatTensor).to(accelerator.device)
 
                 pred = model(x)
