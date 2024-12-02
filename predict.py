@@ -73,7 +73,15 @@ def predict(model, config, logger):
 
     pre_ls, rec_ls, jaccard_ls, dice_ls, hs95_ls = [], [], [], [], []
 
+    mean4_ls = []
+
     file_tqdm = progress.add_task("[red]Predicting file", total=len(dataset))
+
+    if (config.network == "IS"):
+        from utils.Filter import low_pass_filter, high_pass_filter
+        low_cutoff = 0.1
+        high_cutoff = 0.2
+        order = 4
 
     # *  accelerator prepare
     accelerator = Accelerator()
@@ -90,8 +98,15 @@ def predict(model, config, logger):
 
         # assert conf.batch_size == 1, 'batch_size must be 1 for inference'
 
-        patch_loader = torch.utils.data.DataLoader(
-            grid_sampler, batch_size=config.batch_size, shuffle=False, num_workers=0, pin_memory=True
+        # patch_loader = torch.utils.data.DataLoader(
+        #     grid_sampler, batch_size=config.batch_size, shuffle=False, num_workers=0, pin_memory=True
+        # )
+        patch_loader = tio.SubjectsLoader(
+            dataset = grid_sampler, 
+            batch_size = config.batch_size,
+            shuffle = False,
+            num_workers = 0,
+            pin_memory = True
         )
         patch_loader = accelerator.prepare(patch_loader)
         if i == 0:
@@ -110,7 +125,19 @@ def predict(model, config, logger):
                 gt = batch["gt"]["data"]
                 gt = gt.type(torch.FloatTensor).to(accelerator.device)
 
-                pred = model(x)
+                # pred = model(x)
+                if (config.network == "IS"):
+                    x_ = x.cpu().detach().numpy()
+                    low_x = torch.tensor(low_pass_filter(x_, low_cutoff, order))
+                    high_x = torch.tensor(high_pass_filter(x_, high_cutoff, order))
+
+
+                    low_x = low_x.type(torch.FloatTensor).to(accelerator.device)
+                    high_x = high_x.type(torch.FloatTensor).to(accelerator.device)
+
+                    _, pred = model(x, low_x, high_x)
+                else:
+                    pred = model(x)
 
                 # mask = torch.sigmoid(pred.clone())
                 # mask[mask > 0.5] = 1
@@ -135,6 +162,7 @@ def predict(model, config, logger):
             rec_ls.append(recall)
             jaccard_ls.append(jaccard)
             dice_ls.append(dice)
+            mean4_ls.append((precision + recall + jaccard + dice) / 4)
             hs95_ls.append(hs95)
             logger.info(
                 f"File {i+1} metrics: "
@@ -143,15 +171,17 @@ def predict(model, config, logger):
                 f"\njaccard: {jaccard}"
                 f"\ndice: {dice}"
                 f"\nhs95: {hs95}"
+                f"\n(pre+rec+jac+dsc)/4: {(precision + recall + jaccard + dice) / 4}"
             )
         progress.update(file_tqdm, completed=i + 1)
-    save_csv(pre_ls, rec_ls, jaccard_ls, dice_ls, hs95_ls, config)
-    pre_mean, rec_mean, jaccard_mean, dice_mean, hs95_mean = (
+    save_csv(pre_ls, rec_ls, jaccard_ls, dice_ls, hs95_ls, mean4_ls,config)
+    pre_mean, rec_mean, jaccard_mean, dice_mean, hs95_mean, mean4= (
         np.mean(pre_ls),
         np.mean(rec_ls),
         np.mean(jaccard_ls),
         np.mean(dice_ls),
         np.mean(hs95_ls),
+        np.mean(mean4_ls)
     )
     logger.info(
         f"\nprecision_mean: {pre_mean}"
@@ -159,14 +189,15 @@ def predict(model, config, logger):
         f"\njaccard_mean: {jaccard_mean}"
         f"\ndice_mean: {dice_mean}"
         f"\nhs95_mean: {hs95_mean}"
+        f"\n(pre+rec+jac+dsc)/4: {mean4}"
     )
 
 
-def save_csv(pre_ls, rec_ls, jaccard_ls, dice_ls, hs95_ls, config):
+def save_csv(pre_ls, rec_ls, jaccard_ls, dice_ls, hs95_ls, mean4_ls,config):
     import pandas as pd
 
     # data = {"jaccard": jaccard_ls, "dice": dice_ls}
-    data = {"precision": pre_ls, "recall": rec_ls, "jaccard": jaccard_ls, "dice": dice_ls, "hs95": hs95_ls}
+    data = {"precision": pre_ls, "recall": rec_ls, "jaccard": jaccard_ls, "dice": dice_ls, "hs95": hs95_ls, "mean4": mean4_ls}
     df = pd.DataFrame(data)
     # df.loc[len(df)] = [df.iloc[:, 0].mean(), df.iloc[:, 1].mean()]
     df.loc[len(df)] = [
@@ -175,6 +206,7 @@ def save_csv(pre_ls, rec_ls, jaccard_ls, dice_ls, hs95_ls, config):
         df.iloc[:, 2].mean(),
         df.iloc[:, 3].mean(),
         df.iloc[:, 4].mean(),
+        df.iloc[:, 5].mean(),
     ]
     save_path = os.path.join(config.hydra_path, "metrics.csv")
     df.to_csv(save_path, index=False)
@@ -213,6 +245,18 @@ def main(config):
         from models.three_d.ER_net import ER_Net
 
         model = ER_Net(classes=config.out_classes, channels=config.in_classes)
+    elif config.network == "re_net":
+        from models.three_d.RE_net import RE_Net
+
+        model = RE_Net(classes=config.out_classes, channels=config.in_classes)
+    elif config.network == "unetr":
+        from models.three_d.unetr import UNETR
+
+        model = UNETR()
+    elif config.network == "IS":
+        from models.three_d.IS import UNet3D
+
+        model = UNet3D(in_channels=config.in_classes, out_channels=config.out_classes)
     # * create logger
     logger = get_logger(config)
     info = "\nParameter Settings:\n"
