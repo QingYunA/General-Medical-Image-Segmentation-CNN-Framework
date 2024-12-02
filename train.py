@@ -7,13 +7,10 @@ import torch.distributed as dist
 from tqdm import tqdm
 from utils.metric import metric
 from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR, CosineAnnealingLR
-from scipy.signal import filtfilt, butter
 
 # from logger import create_logger
 from timm.utils import AverageMeter
 from accelerate import Accelerator
-
-import torchio as tio
 
 # from utils import yaml_read
 # from utils.conf_base import Default_Conf
@@ -137,18 +134,13 @@ def train(config, model, logger):
 
     train_dataset = Dataset(config)
     #! in distributed training, the 'shuffle' must be false!
-    # train_loader = torch.utils.data.DataLoader(
-    #     dataset=train_dataset.queue_dataset,
-    #     batch_size=config.batch_size,
-    #     shuffle=False,
-    #     num_workers=0,
-    #     pin_memory=True,
-    #     drop_last=True,
-    # )
-    train_loader = tio.SubjectsLoader(
-        dataset = train_dataset.queue_dataset, 
-        batch_size = config.batch_size,
-        shuffle = False
+    train_loader = torch.utils.data.DataLoader(
+        dataset=train_dataset.queue_dataset,
+        batch_size=config.batch_size,
+        shuffle=False,
+        num_workers=0,
+        pin_memory=True,
+        drop_last=True,
     )
 
     epochs = config.epochs - elapsed_epochs
@@ -160,13 +152,6 @@ def train(config, model, logger):
     accelerator = Accelerator()
     # * accelerate prepare
     train_loader, model, optimizer, scheduler = accelerator.prepare(train_loader, model, optimizer, scheduler)
-
-    if (config.network == "IS"):
-        from utils.Filter import low_pass_filter, high_pass_filter
-        low_cutoff = 0.1
-        high_cutoff = -0.1
-        order = 4
-
 
     progress.start()
     for epoch in range(1, epochs + 1):
@@ -186,12 +171,8 @@ def train(config, model, logger):
                 load_time = time.time() - load_start
                 optimizer.zero_grad()
 
-                # x = batch["source"]["data"]  # * from batch extract x:[bs,4 or 1,h,w,d]
-                # gt = batch["gt"]["data"]  # * from batch extract gt:[bs,4 or 1,h,w,d]
-                x = batch["source"][tio.DATA]
-                gt = batch["gt"][tio.DATA]  
-                # print("x_shape, gt_shape=",x.shape, gt.shape)
-
+                x = batch["source"]["data"]  # * from batch extract x:[bs,4 or 1,h,w,d]
+                gt = batch["gt"]["data"]  # * from batch extract gt:[bs,4 or 1,h,w,d]
                 gt_back = torch.zeros_like(gt)
                 gt_back[gt == 0] = 1
                 gt = torch.cat([gt_back, gt], dim=1)  # * [bs,2,h,w,d]
@@ -199,18 +180,7 @@ def train(config, model, logger):
                 x = x.type(torch.FloatTensor).to(accelerator.device)
                 gt = gt.type(torch.FloatTensor).to(accelerator.device)
 
-                if (config.network == "IS"):
-                    x_ = x.cpu().detach().numpy()
-                    low_x = torch.tensor(low_pass_filter(x_, low_cutoff, order))
-                    high_x = torch.tensor(high_pass_filter(x_, high_cutoff, order))
-
-
-                    low_x = low_x.type(torch.FloatTensor).to(accelerator.device)
-                    high_x = high_x.type(torch.FloatTensor).to(accelerator.device)
-
-                    _, pred = model(x, low_x, high_x)
-                else:
-                    pred = model(x)
+                pred = model(x)
 
                 mask = pred.argmax(dim=1, keepdim=True)  # * [bs,1,h,w,d]
 
@@ -322,7 +292,6 @@ def train(config, model, logger):
 @hydra.main(config_path="conf", config_name="config", version_base="1.3")
 def main(config):
     config = config["config"]
-    os.environ["CUDA_VISIBLE_DEVICES"] = config.gpu
     if isinstance(config.patch_size, str):
         assert (
             len(config.patch_size.split(",")) <= 3
