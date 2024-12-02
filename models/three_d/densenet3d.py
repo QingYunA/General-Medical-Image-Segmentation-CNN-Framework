@@ -62,7 +62,7 @@ class SkipDenseNet3D(nn.Module):
         classes (int) - number of classification classes
     """
 
-    def __init__(self, in_channels=1, classes=2, growth_rate=16, block_config=(4, 4, 4, 4), num_init_features=32, drop_rate=0.1,
+    def __init__(self, in_channels=1, classes=1, growth_rate=16, block_config=(4, 4, 4, 4), num_init_features=32, drop_rate=0.1,
                  bn_size=4):
 
         super(SkipDenseNet3D, self).__init__()
