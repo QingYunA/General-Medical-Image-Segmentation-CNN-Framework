@@ -7,11 +7,11 @@ hydra:
     dir: ${config.output_dir}/${hydra:job.name}-${now:%Y-%m-%d}/${now:%H-%M-%S}
 
 config:
-  data_path: '/nvme/tof_data/train/source/'
-  gt_path: '/nvme/tof_data/train/label1/'
-  pred_data_path: '/nvme/tof_data/test/source/'
-  pred_gt_path: '/nvme/tof_data/test/label1/'
-  init_type: 'none'  # ['normal', 'xavier', 'xavier_uniform', 'kaiming', 'orthogonal', 'none]
+  data_path: '/home/cdy/General-Medical-Image-Segmentation-CNN-Framework/PCA22/source/train'
+  gt_path: '/home/cdy/General-Medical-Image-Segmentation-CNN-Framework/PCA22/label/train'
+  pred_data_path: '/home/cdy/General-Medical-Image-Segmentation-CNN-Framework/PCA22/source/test'
+  pred_gt_path: '/home/cdy/General-Medical-Image-Segmentation-CNN-Framework/PCA22/label/test'
+  init_type: 'xavier'  # ['normal', 'xavier', 'xavier_uniform', 'kaiming', 'orthogonal', 'none]
   aug: False  # True or False
   epochs: 100
   epochs_per_checkpoint: 25
@@ -22,6 +22,7 @@ config:
   cudnn_enabled: True
   cudnn_benchmark: True
   use_scheduler: True
+  gpu: '1'
   
   job_name: ${hydra:job.name}
   hydra_path: ${hydra:runtime.output_dir}
