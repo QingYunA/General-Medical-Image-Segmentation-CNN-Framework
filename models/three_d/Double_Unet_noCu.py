@@ -3,10 +3,8 @@ import torchvision
 import numpy as np
 from collections import OrderedDict
 import torch.nn as nn
-
 from models.three_d.SE import SE_Inception, SE_Residual
-# from SE import SE_Residual, SE_Inception
-
+# from SE import SE_Residual
 
 # --------------------------------------------------------------------------------
 
@@ -38,7 +36,7 @@ class Double_Unet(nn.Module):
 
 
         # ? 1 Coarse Unet
-        in_chan = in_channels + out_channels
+        in_chan = in_channels
         features = unet_init_features
         # * Encoder
         self.fu_encoder1 = self._block(in_chan, features, name="fu_enc1")
@@ -59,35 +57,32 @@ class Double_Unet(nn.Module):
         self.fu_decoder1 = self._block(features * 3, features, name="fu_dec1")
         self.fu_conv = nn.Conv3d(in_channels=features, out_channels=out_channels, kernel_size=1)
 
+
         self.SE3 = SE_Residual(4*features)
         self.SE2 = SE_Residual(2*features)
         self.SE1 = SE_Residual(features)
 
-        # self.SE3 = SE_Inception(4*features)
-        # self.SE2 = SE_Inception(2*features)
-        # self.SE1 = SE_Inception(features)
-
     def forward(self, x):
         # * Coarse Unet
-        enc1 = self.cu_encoder1(x)
-        enc2 = self.cu_encoder2(self.cu_pool1(enc1))
-        enc3 = self.cu_encoder3(self.cu_pool2(enc2))
+        # // enc1 = self.cu_encoder1(x)
+        # // enc2 = self.cu_encoder2(self.cu_pool1(enc1))
+        # // enc3 = self.cu_encoder3(self.cu_pool2(enc2))
 
-        bottleneck = self.cu_bottleneck(self.cu_pool3(enc3))
+        # // bottleneck = self.cu_bottleneck(self.cu_pool3(enc3))
 
-        dec3 = self.cu_upconv3(bottleneck)
-        dec3 = torch.cat((dec3, enc3), dim=1)
-        dec3 = self.cu_decoder3(dec3)
-        dec2 = self.cu_upconv2(dec3)
-        dec2 = torch.cat((dec2, enc2), dim=1)
-        dec2 = self.cu_decoder2(dec2)
-        dec1 = self.cu_upconv1(dec2)
-        dec1 = torch.cat((dec1, enc1), dim=1)
-        dec1 = self.cu_decoder1(dec1)
-        cu_outputs = self.cu_conv(dec1)
+        # // dec3 = self.cu_upconv3(bottleneck)
+        # // dec3 = torch.cat((dec3, enc3), dim=1)
+        # // dec3 = self.cu_decoder3(dec3)
+        # // dec2 = self.cu_upconv2(dec3)
+        # // dec2 = torch.cat((dec2, enc2), dim=1)
+        # // dec2 = self.cu_decoder2(dec2)
+        # // dec1 = self.cu_upconv1(dec2)
+        # // dec1 = torch.cat((dec1, enc1), dim=1)
+        # // dec1 = self.cu_decoder1(dec1)
+        # // cu_outputs = self.cu_conv(dec1)
 
         # * Fine Unet
-        x_ = torch.cat((x, cu_outputs), dim=1)
+        x_ = x
         enc1 = self.fu_encoder1(x_)
         enc2 = self.fu_encoder2(self.fu_pool1(enc1))
         enc3 = self.fu_encoder3(self.fu_pool2(enc2))

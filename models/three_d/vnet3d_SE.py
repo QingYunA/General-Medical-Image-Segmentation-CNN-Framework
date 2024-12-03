@@ -6,6 +6,8 @@ import torch.nn as nn
 import os
 import numpy as np
 from collections import OrderedDict
+from models.three_d.SE import SE_Inception, SE_Residual
+# from SE import SE_Residual
 
 def passthrough(x, **kwargs):
     return x
@@ -39,9 +41,9 @@ def _make_nConv(nchan, depth, elu):
 
 
 class InputTransition(nn.Module):
-    def __init__(self, in_channels, elu):
+    def __init__(self, in_channels, features, elu):
         super(InputTransition, self).__init__()
-        self.num_features = 16
+        self.num_features = features
         self.in_channels = in_channels
 
         self.conv1 = nn.Conv3d(self.in_channels, self.num_features, kernel_size=5, padding=2)
@@ -131,29 +133,62 @@ class VNet(nn.Module):
         self.classes = classes
         self.in_channels = in_channels
 
-        self.in_tr = InputTransition(in_channels, elu=elu)
-        self.down_tr32 = DownTransition(16, 1, elu)
-        self.down_tr64 = DownTransition(32, 2, elu)
-        self.down_tr128 = DownTransition(64, 3, elu, dropout=False)
-        self.down_tr256 = DownTransition(128, 2, elu, dropout=False)
-        self.up_tr256 = UpTransition(256, 256, 2, elu, dropout=False)
-        self.up_tr128 = UpTransition(256, 128, 2, elu, dropout=False)
-        self.up_tr64 = UpTransition(128, 64, 1, elu)
-        self.up_tr32 = UpTransition(64, 32, 1, elu)
-        self.out_tr = OutputTransition(32, classes, elu)
+        self.in_tr_1 = InputTransition(in_channels, 8,elu=elu)
+        self.down_tr32_1 = DownTransition(8, 1, elu)
+        self.down_tr64_1 = DownTransition(16, 2, elu)
+        self.down_tr128_1 = DownTransition(32, 3, elu, dropout=False)
+        self.down_tr256_1 = DownTransition(64, 2, elu, dropout=False)
+        self.up_tr256_1 = UpTransition(128, 128, 2, elu, dropout=False)
+        self.up_tr128_1 = UpTransition(128, 64, 2, elu, dropout=False)
+        self.up_tr64_1 = UpTransition(64, 32, 1, elu)
+        self.up_tr32_1 = UpTransition(32, 16, 1, elu)
+        self.out_tr_1 = OutputTransition(16, classes, elu)
+
+
+        in_channels = classes
+        self.in_tr_2 = InputTransition(in_channels, 16, elu=elu)
+        self.down_tr32_2 = DownTransition(16, 1, elu)
+        self.down_tr64_2 = DownTransition(32, 2, elu)
+        self.down_tr128_2 = DownTransition(64, 3, elu, dropout=False)
+        self.down_tr256_2 = DownTransition(128, 2, elu, dropout=False)
+        self.up_tr256_2 = UpTransition(256, 256, 2, elu, dropout=False)
+        self.up_tr128_2 = UpTransition(256, 128, 2, elu, dropout=False)
+        self.up_tr64_2 = UpTransition(128, 64, 1, elu)
+        self.up_tr32_2 = UpTransition(64, 32, 1, elu)
+        self.out_tr_2 = OutputTransition(32, classes, elu)
+
+        self.SE = SE_Residual(256)
 
 
     def forward(self, x):
-        out16 = self.in_tr(x)
-        out32 = self.down_tr32(out16)
-        out64 = self.down_tr64(out32)
-        out128 = self.down_tr128(out64)
-        out256 = self.down_tr256(out128)
-        out = self.up_tr256(out256, out128)
-        out = self.up_tr128(out, out64)
-        out = self.up_tr64(out, out32)
-        out = self.up_tr32(out, out16)
-        out = self.out_tr(out)
+        out16 = self.in_tr_1(x)
+        out32 = self.down_tr32_1(out16)
+        out64 = self.down_tr64_1(out32)
+        out128 = self.down_tr128_1(out64)
+        out256 = self.down_tr256_1(out128)
+        out = self.up_tr256_1(out256, out128)
+        out = self.up_tr128_1(out, out64)
+        out = self.up_tr64_1(out, out32)
+        out = self.up_tr32_1(out, out16)
+        out = self.out_tr_1(out)
+
+        # print(out.shape)
+
+        x_ = out
+
+        # print(x_.shape)
+        out16 = self.in_tr_2(x_)
+        out32 = self.down_tr32_2(out16)
+        out64 = self.down_tr64_2(out32)
+        out128 = self.down_tr128_2(out64)
+        out256 = self.down_tr256_2(out128)
+        out256 = self.SE(out256)
+        out = self.up_tr256_2(out256, out128)
+        out = self.up_tr128_2(out, out64)
+        out = self.up_tr64_2(out, out32)
+        out = self.up_tr32_2(out, out16)
+        out = self.out_tr_2(out)
+
         return out
 
 

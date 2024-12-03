@@ -59,13 +59,13 @@ class Double_Unet(nn.Module):
         self.fu_decoder1 = self._block(features * 3, features, name="fu_dec1")
         self.fu_conv = nn.Conv3d(in_channels=features, out_channels=out_channels, kernel_size=1)
 
-        self.SE3 = SE_Residual(4*features)
-        self.SE2 = SE_Residual(2*features)
-        self.SE1 = SE_Residual(features)
+        # self.SE3 = SE_Residual(4*features)
+        # self.SE2 = SE_Residual(2*features)
+        # self.SE1 = SE_Residual(features)
 
-        # self.SE3 = SE_Inception(4*features)
-        # self.SE2 = SE_Inception(2*features)
-        # self.SE1 = SE_Inception(features)
+        self.SE3 = SE_Inception(4*features)
+        self.SE2 = SE_Inception(2*features)
+        self.SE1 = SE_Inception(features)
 
     def forward(self, x):
         # * Coarse Unet
