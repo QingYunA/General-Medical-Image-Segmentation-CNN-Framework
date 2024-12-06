@@ -383,6 +383,10 @@ def main(config):
         from models.three_d.Double_Unet_Incep import Double_Unet
 
         model = Double_Unet()
+    elif config.network == "Dunet_noFine":
+        from models.three_d.Double_Unet_noFine import Double_Unet
+
+        model = Double_Unet()
     elif config.network == "vnetse":
         from models.three_d.vnet3d_SE import VNet
 
@@ -399,6 +403,10 @@ def main(config):
         from models.three_d.densevoxelnet3d import DenseVoxelNet
 
         model = DenseVoxelNet(in_channels=config.in_classes, classes=config.out_classes)
+    elif config.network == "csrnetse":
+        from models.three_d.csrnet_SE import CSRNet
+
+        model = CSRNet(in_channels=config.in_classes, out_channels=config.out_classes)
     model.apply(weights_init_normal(config.init_type))
 
     # * create logger

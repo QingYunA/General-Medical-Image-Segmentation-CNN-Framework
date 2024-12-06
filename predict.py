@@ -281,6 +281,22 @@ def main(config):
         from models.three_d.vnet3d_SE import VNet
 
         model = VNet()
+    elif config.network == "densevoxelnet":
+        from models.three_d.densevoxelnet3d import DenseVoxelNet
+
+        model = DenseVoxelNet(in_channels=config.in_classes, classes=config.out_classes)
+    elif config.network == "vnet":
+        from models.three_d.vnet3d import VNet  
+
+        model = VNet(in_channels=config.in_classes, classes=config.out_classes)
+    elif config.network == "Dunet_noFine":
+        from models.three_d.Double_Unet_noFine import Double_Unet
+
+        model = Double_Unet()
+    elif config.network == "csrnetse":
+        from models.three_d.csrnet_SE import CSRNet
+
+        model = CSRNet(in_channels=config.in_classes, out_channels=config.out_classes)
     # * create logger
     logger = get_logger(config)
     info = "\nParameter Settings:\n"
