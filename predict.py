@@ -257,30 +257,6 @@ def main(config):
         from models.three_d.IS import UNet3D
 
         model = UNet3D(in_channels=config.in_classes, out_channels=config.out_classes)
-    elif config.network == "Dunet_noSE":
-        from models.three_d.Double_Unet_noSE import Double_Unet
-
-        model = Double_Unet()
-    elif config.network == "Dunet_noCrop":
-        from models.three_d.Double_Unet_noCrop import Double_Unet
-
-        model = Double_Unet()
-    elif config.network == "Dunet_noCu":
-        from models.three_d.Double_Unet_noCu import Double_Unet
-
-        model = Double_Unet()
-    elif config.network == "Dunet_Incep":
-        from models.three_d.Double_Unet_Incep import Double_Unet
-
-        model = Double_Unet()
-    elif config.network == "Dunet":
-        from models.three_d.Double_Unet import Double_Unet
-
-        model = Double_Unet()
-    elif config.network == "vnetse":
-        from models.three_d.vnet3d_SE import VNet
-
-        model = VNet()
     elif config.network == "densevoxelnet":
         from models.three_d.densevoxelnet3d import DenseVoxelNet
 
@@ -289,10 +265,6 @@ def main(config):
         from models.three_d.vnet3d import VNet  
 
         model = VNet(in_channels=config.in_classes, classes=config.out_classes)
-    elif config.network == "Dunet_noFine":
-        from models.three_d.Double_Unet_noFine import Double_Unet
-
-        model = Double_Unet()
     elif config.network == "csrnetse":
         from models.three_d.csrnet_SE import CSRNet
 

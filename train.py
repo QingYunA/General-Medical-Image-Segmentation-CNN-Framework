@@ -367,34 +367,6 @@ def main(config):
         from models.three_d.vtnet import VTUNet
 
         model = VTUNet(num_classes=config.out_classes, input_dim=config.in_classes)
-    elif config.network == "Dunet_noSE":
-        from models.three_d.Double_Unet_noSE import Double_Unet
-
-        model = Double_Unet()
-    elif config.network == "Dunet_noCrop":
-        from models.three_d.Double_Unet_noCrop import Double_Unet
-
-        model = Double_Unet()
-    elif config.network == "Dunet_noCu":
-        from models.three_d.Double_Unet_noCu import Double_Unet
-
-        model = Double_Unet()
-    elif config.network == "Dunet_Incep":
-        from models.three_d.Double_Unet_Incep import Double_Unet
-
-        model = Double_Unet()
-    elif config.network == "Dunet_noFine":
-        from models.three_d.Double_Unet_noFine import Double_Unet
-
-        model = Double_Unet()
-    elif config.network == "vnetse":
-        from models.three_d.vnet3d_SE import VNet
-
-        model = VNet()
-    elif config.network == "Dunet":
-        from models.three_d.Double_Unet import Double_Unet
-
-        model = Double_Unet()
     elif config.network == "vnet":
         from models.three_d.vnet3d import VNet
 
