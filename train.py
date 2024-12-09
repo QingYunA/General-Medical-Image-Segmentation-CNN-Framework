@@ -300,6 +300,7 @@ def main(config):
             config.patch_size = tuple(map(int, config.patch_size.split(",")))
         else:
             config.patch_size = int(config.patch_size)
+    os["CUDA_AVAILABLE_DEVICES"] = config.gpu
 
     # * model selection
     if config.network == "res_unet":
