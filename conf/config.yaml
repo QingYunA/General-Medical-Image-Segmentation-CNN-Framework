@@ -7,10 +7,10 @@ hydra:
     dir: ${config.output_dir}/${hydra:job.name}-${now:%Y-%m-%d}/${now:%H-%M-%S}
 
 config:
-  data_path: '/home/cdy/General-Medical-Image-Segmentation-CNN-Framework/PCA22/source/train'
-  gt_path: '/home/cdy/General-Medical-Image-Segmentation-CNN-Framework/PCA22/label/train'
-  pred_data_path: '/home/cdy/General-Medical-Image-Segmentation-CNN-Framework/PCA22/source/test'
-  pred_gt_path: '/home/cdy/General-Medical-Image-Segmentation-CNN-Framework/PCA22/label/test'
+  data_path: '/nvme/tof_data/train/source/'
+  gt_path: '/nvme/tof_data/train/label1/'
+  pred_data_path: '/nvme/tof_data/test/source/'
+  pred_gt_path: '/nvme/tof_data/test/label1/'
   init_type: 'xavier'  # ['normal', 'xavier', 'xavier_uniform', 'kaiming', 'orthogonal', 'none]
   aug: False  # True or False
   epochs: 100
