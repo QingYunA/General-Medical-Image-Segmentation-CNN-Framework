@@ -199,6 +199,8 @@ def main(config):
             config.patch_size = tuple(map(int, config.patch_size.split(",")))
         else:
             config.patch_size = int(config.patch_size)
+        
+    os["CUDA_VISIBLE_DEVICES"] = config.gpu
 
     os.makedirs(config.hydra_path, exist_ok=True)
     if config.network == "res_unet":
@@ -233,8 +235,8 @@ def main(config):
         from models.three_d.vnet3d import VNet  
 
         model = VNet(in_channels=config.in_classes, classes=config.out_classes)
-    elif config.network == "csrnetse":
-        from models.three_d.csrnet_SE import CSRNet
+    elif config.network == "csrnet":
+        from models.three_d.csrnet import CSRNet
 
         model = CSRNet(in_channels=config.in_classes, out_channels=config.out_classes)
     # * create logger
