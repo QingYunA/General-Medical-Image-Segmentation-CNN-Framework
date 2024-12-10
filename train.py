@@ -300,6 +300,7 @@ def main(config):
             config.patch_size = tuple(map(int, config.patch_size.split(",")))
         else:
             config.patch_size = int(config.patch_size)
+    os["CUDA_AVAILABLE_DEVICES"] = config.gpu
 
     # * model selection
     if config.network == "res_unet":
@@ -318,7 +319,36 @@ def main(config):
         from models.three_d.RE_net import RE_Net
 
         model = RE_Net(classes=config.out_classes, channels=config.in_classes)
+    elif config.network == "IS":
+        from models.three_d.IS import UNet3D
 
+        model = UNet3D(in_channels=config.in_classes, out_channels=config.out_classes)
+
+    elif config.network == "unetr":
+        from models.three_d.unetr import UNETR
+
+        model = UNETR()
+    elif config.network == "densenet":
+        from models.three_d.densenet3d import SkipDenseNet3D
+
+        model = SkipDenseNet3D(in_channels=config.in_classes, classes=config.out_classes)
+
+    elif config.network == "vtnet":
+        from models.three_d.vtnet import VTUNet
+
+        model = VTUNet(num_classes=config.out_classes, input_dim=config.in_classes)
+    elif config.network == "vnet":
+        from models.three_d.vnet3d import VNet
+
+        model = VNet(in_channels=config.in_classes, classes=config.out_classes)
+    elif config.network == "densevoxelnet":
+        from models.three_d.densevoxelnet3d import DenseVoxelNet
+
+        model = DenseVoxelNet(in_channels=config.in_classes, classes=config.out_classes)
+    elif config.network == "csrnetse":
+        from models.three_d.csrnet_SE import CSRNet
+
+        model = CSRNet(in_channels=config.in_classes, out_channels=config.out_classes)
     model.apply(weights_init_normal(config.init_type))
 
     # * create logger

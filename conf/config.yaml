@@ -15,13 +15,14 @@ config:
   aug: False  # True or False
   epochs: 100
   epochs_per_checkpoint: 25
-  batch_size: 4
+  batch_size: 16
   init_lr: 0.01
   scheduler_step_size: 20
   scheduler_gamma: 0.8
   cudnn_enabled: True
   cudnn_benchmark: True
   use_scheduler: True
+  gpu: "0,1"
   
   job_name: ${hydra:job.name}
   hydra_path: ${hydra:runtime.output_dir}

@@ -12,4 +12,5 @@ latest_checkpoint_file: 'latest_checkpoint.pt'  # ckpt + latest_checkpoint_file 
 #* Training Settings
 crop_or_pad_size: 64, 64, 64  # if 2D: 256,256,1  #USELESS
 patch_size: 64, 64, 64  # if 2D: 128,128,1
+gpu: "2"
 

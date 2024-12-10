@@ -93,7 +93,7 @@ class DenseVoxelNet(nn.Module):
     Trainable params: 1,783,408 (roughly 1.8 mentioned in the paper)
     """
 
-    def __init__(self, in_channels=1, classes=1):
+    def __init__(self, in_channels=1, classes=2):
         super(DenseVoxelNet, self).__init__()
         num_input_features = 16
         self.dense_1_out_features = 160

@@ -126,7 +126,7 @@ class VNet(nn.Module):
     Implementations based on the Vnet paper: https://arxiv.org/abs/1606.04797
     """
 
-    def __init__(self, elu=True, in_channels=1, classes=1):
+    def __init__(self, elu=True, in_channels=1, classes=2):
         super(VNet, self).__init__()
         self.classes = classes
         self.in_channels = in_channels
@@ -155,5 +155,12 @@ class VNet(nn.Module):
         out = self.up_tr32(out, out16)
         out = self.out_tr(out)
         return out
+
+
+if __name__ == "__main__":
+    model = VNet()
+    print(model)
+    x = torch.randn(1, 1, 64, 64, 64)
+    print(model(x).shape)
 
    
