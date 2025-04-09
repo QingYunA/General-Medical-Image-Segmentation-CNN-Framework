@@ -7,16 +7,24 @@ hydra:
     dir: ${config.output_dir}/${hydra:job.name}-${now:%Y-%m-%d}/${now:%H-%M-%S}
 
 config:
-  data_path: '/nvme/tof_data/train/source/'
-  gt_path: '/nvme/tof_data/train/label1/'
-  pred_data_path: '/nvme/tof_data/test/source/'
-  pred_gt_path: '/nvme/tof_data/test/label1/'
-  init_type: 'none'  # ['normal', 'xavier', 'xavier_uniform', 'kaiming', 'orthogonal', 'none]
+  # data_path: '/nvme/tof_data/train/source/'
+  # gt_path: '/nvme/tof_data/train/label1/'
+  # pred_data_path: '/nvme/tof_data/test/source/'
+  # pred_gt_path: '/nvme/tof_data/test/label1/'
+  # data_path: "/disk/cyq/2025/cas2023/train/data"
+  # gt_path: "/disk/cyq/2025/cas2023/train/mask"
+  # pred_data_path: "/disk/cyq/2025/cas2023/test/data"
+  # pred_gt_path: "/disk/cyq/2025/cas2023/test/mask"
+  data_path: "/disk/cyq/midas/train/source"
+  gt_path: "/disk/cyq/midas/train/label"
+  pred_data_path: "/disk/cyq/midas/test/source"
+  pred_gt_path: "/disk/cyq/midas/test/label"
+  init_type: 'kaiming'  # ['normal', 'xavier', 'xavier_uniform', 'kaiming', 'orthogonal', 'none]
   aug: False  # True or False
   epochs: 100
-  epochs_per_checkpoint: 25
+  epochs_per_checkpoint: 5
   batch_size: 16
-  init_lr: 0.01
+  init_lr: 0.001
   scheduler_step_size: 20
   scheduler_gamma: 0.8
   cudnn_enabled: True

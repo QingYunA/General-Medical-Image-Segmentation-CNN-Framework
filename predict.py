@@ -8,12 +8,14 @@ from torchio.transforms import (
     ZNormalization,
 )
 from tqdm import tqdm
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.pardir)))
 from utils.metric import metric
 from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR, CosineAnnealingLR
 import numpy as np
-from utils.logger import create_logger
-from utils import yaml_read
-from utils.conf_base import Default_Conf
+# from utils.logger import create_logger
+# from utils import yaml_read
+# from utils.conf_base import Default_Conf
 from rich.progress import (
     BarColumn,
     Progress,
@@ -25,6 +27,7 @@ import hydra
 from rich.logging import RichHandler
 import logging
 from accelerate import Accelerator
+import torch.fft as fft
 import shutil
 
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"  # ! solve warning
@@ -42,7 +45,19 @@ def get_logger(config):
     log.info("Successfully create rich logger")
 
     return log
+def low_pass_torch(input,limit):
+    pass1 = torch.abs(fft.rfftfreq(input.shape[-1]))<limit
+    pass2 = torch.abs(fft.fftfreq(input.shape[-2]))<limit
+    kernel = torch.outer(pass2, pass1).to(input)
+    fft_input = fft.rfftn(input)
+    return fft.irfftn(fft_input*kernel,s=input.shape[-3:])
 
+def high_pass_torch(input,limit):
+    pass1 = torch.abs(fft.rfftfreq(input.shape[-1]))>limit
+    pass2 = torch.abs(fft.fftfreq(input.shape[-2]))>limit
+    kernel = torch.outer(pass2, pass1).to(input)
+    fft_input = fft.rfftn(input)
+    return fft.irfftn(fft_input*kernel,s=input.shape[-3:])
 
 def predict(model, config, logger):
     torch.backends.cudnn.deterministic = True
@@ -60,8 +75,8 @@ def predict(model, config, logger):
     # * load model
     # assert type(conf.ckpt) == str, "You must specify the checkpoint path"
     assert isinstance(config.ckpt, str), "You must specify the checkpoint path"
-    logger.info(f"load model from:{os.path.join(config.ckpt, config.latest_checkpoint_file)}")
-    ckpt = torch.load(os.path.join(config.ckpt, config.latest_checkpoint_file), map_location=lambda storage, loc: storage)
+    logger.info(f"load model from:{os.path.join(config.ckpt)}")
+    ckpt = torch.load(os.path.join(config.ckpt), map_location=lambda storage, loc: storage)
     model.load_state_dict(ckpt["model"])
     model.eval()
 
@@ -110,7 +125,12 @@ def predict(model, config, logger):
                 gt = batch["gt"]["data"]
                 gt = gt.type(torch.FloatTensor).to(accelerator.device)
 
-                pred = model(x)
+                if config.network=="IS":
+                    high_x = high_pass_torch(x,0.04)
+                    low_x = low_pass_torch(x,0.04)
+                    pred,_ = model(x,low_x,high_x)
+                else:
+                    pred = model(x)
 
                 # mask = torch.sigmoid(pred.clone())
                 # mask[mask > 0.5] = 1
@@ -127,7 +147,8 @@ def predict(model, config, logger):
             gt_t = gt_aggregator.get_output_tensor()
 
             # * save pred mhd file
-            save_mhd(pred_t, affine, i, config)
+            # save_mhd(pred_t, affine, i, config)
+            save_nii(pred_t, affine, i, config)
 
             # * calculate metrics
             precision, recall, jaccard, dice, hs95 = metric(gt_t, pred_t, spacing)
@@ -186,6 +207,12 @@ def save_mhd(pred, affine, index, config):
     pred_data = tio.ScalarImage(tensor=pred, affine=affine)
     pred_data.save(os.path.join(save_base, f"pred-{index:04d}.mhd"))
 
+def save_nii(pred, affine, index, config):
+    save_base = os.path.join(config.hydra_path, "pred_file")
+    os.makedirs(save_base, exist_ok=True)
+    pred_data = tio.ScalarImage(tensor=pred, affine=affine)
+    pred_data.save(os.path.join(save_base, f"pred-{index:04d}.nii.gz"))
+    
 
 @hydra.main(config_path="conf", config_name="config")
 def main(config):
@@ -200,7 +227,7 @@ def main(config):
         else:
             config.patch_size = int(config.patch_size)
         
-    os["CUDA_VISIBLE_DEVICES"] = config.gpu
+    # os["CUDA_VISIBLE_DEVICES"] = config.gpu
 
     os.makedirs(config.hydra_path, exist_ok=True)
     if config.network == "res_unet":
@@ -218,7 +245,7 @@ def main(config):
     elif config.network == "re_net":
         from models.three_d.RE_net import RE_Net
 
-        model = RE_Net(classes=config.out_classes, channels=config.in_classes)
+        model = RE_Net()
     elif config.network == "unetr":
         from models.three_d.unetr import UNETR
 
@@ -226,11 +253,15 @@ def main(config):
     elif config.network == "IS":
         from models.three_d.IS import UNet3D
 
-        model = UNet3D(in_channels=config.in_classes, out_channels=config.out_classes)
+        model = UNet3D(in_channels=config.in_classes, out_channels=config.out_classes,init_features=32)
     elif config.network == "densevoxelnet":
         from models.three_d.densevoxelnet3d import DenseVoxelNet
 
         model = DenseVoxelNet(in_channels=config.in_classes, classes=config.out_classes)
+    elif config.network == "densenet":
+        from models.three_d.densenet3d import SkipDenseNet3D
+
+        model = SkipDenseNet3D(in_channels=config.in_classes, classes=config.out_classes)
     elif config.network == "vnet":
         from models.three_d.vnet3d import VNet  
 

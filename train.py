@@ -10,6 +10,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR, CosineAnnealingL
 
 # from logger import create_logger
 from timm.utils import AverageMeter
+import torch.fft as fft
 from accelerate import Accelerator
 
 # from utils import yaml_read
@@ -21,6 +22,7 @@ from rich.progress import (
     MofNCompleteColumn,
     TimeRemainingColumn,
 )
+import torch.nn as nn
 import logging
 from rich.logging import RichHandler
 import hydra
@@ -71,7 +73,19 @@ def get_logger(config):
     log.info("Successfully create rich logger")
 
     return log
+def low_pass_torch(input,limit):
+    pass1 = torch.abs(fft.rfftfreq(input.shape[-1]))<limit
+    pass2 = torch.abs(fft.fftfreq(input.shape[-2]))<limit
+    kernel = torch.outer(pass2, pass1).to(input)
+    fft_input = fft.rfftn(input)
+    return fft.irfftn(fft_input*kernel,s=input.shape[-3:])
 
+def high_pass_torch(input,limit):
+    pass1 = torch.abs(fft.rfftfreq(input.shape[-1]))>limit
+    pass2 = torch.abs(fft.fftfreq(input.shape[-2]))>limit
+    kernel = torch.outer(pass2, pass1).to(input)
+    fft_input = fft.rfftn(input)
+    return fft.irfftn(fft_input*kernel,s=input.shape[-3:])
 
 def train(config, model, logger):
     torch.backends.cudnn.deterministic = True
@@ -97,7 +111,8 @@ def train(config, model, logger):
     # * set loss function
     from utils.loss_function import Binary_Loss, DiceLoss, cross_entropy_3D
 
-    criterion = Binary_Loss()
+    # criterion = Binary_Loss()
+    criterion = nn.BCEWithLogitsLoss()
     # dice_criterion = DiceLoss().cuda()
 
     # * set scheduler strategy
@@ -106,9 +121,9 @@ def train(config, model, logger):
 
     # * load model
     if config.load_mode == 1:  # * load weights from checkpoint
-        logger.info(f"load model from: {os.path.join(config.ckpt, config.latest_checkpoint_file)}")
+        logger.info(f"load model from: {os.path.join(config.ckpt)}")
         ckpt = torch.load(
-            os.path.join(config.ckpt, config.latest_checkpoint_file), map_location=lambda storage, loc: storage
+            os.path.join(config.ckpt), map_location=lambda storage, loc: storage
         )
         model.load_state_dict(ckpt["model"])
         optimizer.load_state_dict(ckpt["optim"])
@@ -180,10 +195,13 @@ def train(config, model, logger):
                 x = x.type(torch.FloatTensor).to(accelerator.device)
                 gt = gt.type(torch.FloatTensor).to(accelerator.device)
 
-                pred = model(x)
-
+                if config.network=="IS":
+                    high_x = high_pass_torch(x,0.04)
+                    low_x = low_pass_torch(x,0.04)
+                    pred,_ = model(x,low_x,high_x)
+                else:
+                    pred = model(x)
                 mask = pred.argmax(dim=1, keepdim=True)  # * [bs,1,h,w,d]
-
                 # *  pred -> mask (0 or 1)
                 # mask[mask > 0.5] = 1
                 # mask[mask <= 0.5] = 0
@@ -300,7 +318,7 @@ def main(config):
             config.patch_size = tuple(map(int, config.patch_size.split(",")))
         else:
             config.patch_size = int(config.patch_size)
-    os["CUDA_AVAILABLE_DEVICES"] = config.gpu
+    # os["CUDA_AVAILABLE_DEVICES"] = config.gpu
 
     # * model selection
     if config.network == "res_unet":
@@ -318,11 +336,11 @@ def main(config):
     elif config.network == "re_net":
         from models.three_d.RE_net import RE_Net
 
-        model = RE_Net(classes=config.out_classes, channels=config.in_classes)
+        model = RE_Net()
     elif config.network == "IS":
         from models.three_d.IS import UNet3D
 
-        model = UNet3D(in_channels=config.in_classes, out_channels=config.out_classes)
+        model = UNet3D(in_channels=config.in_classes, out_channels=config.out_classes,init_features=32)
 
     elif config.network == "unetr":
         from models.three_d.unetr import UNETR
