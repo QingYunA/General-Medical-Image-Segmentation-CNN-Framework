@@ -1,8 +1,6 @@
 # Makefile / dataset /some useless models/ configs
 Makefile
 PCA22/
-Double*
-*SE*
 __init__.py
 conf/config/*.yaml
 !unet.yaml

@@ -20,7 +20,8 @@
 | 2017-05 | 3D Residual U-Net |        Kisuk Lee 和 H. Sebastian Seung        |                               Superhuman Accuracy on the SNEMI3D Connectomics Challenge                               |                                                       [arxiv](https://arxiv.org/abs/1706.00120)                                                       |
 | 2021-10 |      CSR-Net      |           Cheng Chen 和 Ruoxiu Xiao           |               CSR-Net: Cross-Scale Residual Network for multi-objective scaphoid fracture segmentation               |                                    [CIBM2021](https://www.sciencedirect.com/science/article/pii/S0010482521005709)                                    |
 |   2022   |       UNETR       |         Ali Hatamizadeh 和 Daguang Xu         |                                 UNETR: Transformers for 3D Medical Image Segmentation                                 | [CVPR2022](https://openaccess.thecvf.com/content/WACV2022/html/Hatamizadeh_UNETR_Transformers_for_3D_Medical_Image_Segmentation_WACV_2022_paper.html) |
-|   2023   |        IS        |              陈程 和 Ruoxiu Xiao              |           Integration- and separation-aware adversarial model for cerebrovascular segmentation from TOF-MRA           |                                    [CMPB](https://www.sciencedirect.com/science/article/abs/pii/S0169260723001414)                                    |
+|   2023   |        IS        |              Cheng Chen 和 Ruoxiu Xiao              |           Integration- and separation-aware adversarial model for cerebrovascular segmentation from TOF-MRA           |                                    [CMPB](https://www.sciencedirect.com/science/article/abs/pii/S0169260723001414)                                    |
+| 2025 | DUNet | zhangcan 和 Ruoxiu Xiao | “智能健康与医疗”专辑+DU-Net：一种协同优化模型的小样本脑血管分割方法 | [工程科学学报](https://cje.ustb.edu.cn/article/doi/10.13374/j.issn2095-9389.2024.12.13.003) | 
 
 ## 使用方法
 
