@@ -270,6 +270,10 @@ def main(config):
         from models.three_d.csrnet import CSRNet
 
         model = CSRNet(in_channels=config.in_classes, out_channels=config.out_classes)
+    elif config.network == "dunet":
+        from models.three_d.Double_Unet import Double_Unet
+        
+        model = Double_Unet(in_channels=config.in_classes, out_channels=config.out_classes)
     # * create logger
     logger = get_logger(config)
     info = "\nParameter Settings:\n"
