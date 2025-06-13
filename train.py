@@ -40,7 +40,9 @@ def weights_init_normal(init_type):
                 torch.nn.init.normal_(m.weight.data, 1.0, gain)
             if hasattr(m, "bias") and m.bias is not None:
                 torch.nn.init.constant_(m.bias.data, 0.0)
-        elif hasattr(m, "weight") and (classname.find("Conv") != -1 or classname.find("Linear") != -1):
+        elif hasattr(m, "weight") and (
+            classname.find("Conv") != -1 or classname.find("Linear") != -1
+        ):
             if init_type == "normal":
                 torch.nn.init.normal_(m.weight.data, 0.0, gain)
             elif init_type == "xavier":
@@ -54,7 +56,9 @@ def weights_init_normal(init_type):
             elif init_type == "none":  # uses pytorch's default init method
                 m.reset_parameters()
             else:
-                raise NotImplementedError("initialization method [%s] is not implemented" % init_type)
+                raise NotImplementedError(
+                    "initialization method [%s] is not implemented" % init_type
+                )
             if hasattr(m, "bias") and m.bias is not None:
                 torch.nn.init.constant_(m.bias.data, 0.0)
 
@@ -62,7 +66,9 @@ def weights_init_normal(init_type):
 
 
 def get_logger(config):
-    file_handler = logging.FileHandler(os.path.join(config.hydra_path, f"{config.job_name}.log"))
+    file_handler = logging.FileHandler(
+        os.path.join(config.hydra_path, f"{config.job_name}.log")
+    )
     rich_handler = RichHandler()
 
     log = logging.getLogger(__name__)
@@ -73,19 +79,23 @@ def get_logger(config):
     log.info("Successfully create rich logger")
 
     return log
-def low_pass_torch(input,limit):
-    pass1 = torch.abs(fft.rfftfreq(input.shape[-1]))<limit
-    pass2 = torch.abs(fft.fftfreq(input.shape[-2]))<limit
-    kernel = torch.outer(pass2, pass1).to(input)
-    fft_input = fft.rfftn(input)
-    return fft.irfftn(fft_input*kernel,s=input.shape[-3:])
 
-def high_pass_torch(input,limit):
-    pass1 = torch.abs(fft.rfftfreq(input.shape[-1]))>limit
-    pass2 = torch.abs(fft.fftfreq(input.shape[-2]))>limit
+
+def low_pass_torch(input, limit):
+    pass1 = torch.abs(fft.rfftfreq(input.shape[-1])) < limit
+    pass2 = torch.abs(fft.fftfreq(input.shape[-2])) < limit
     kernel = torch.outer(pass2, pass1).to(input)
     fft_input = fft.rfftn(input)
-    return fft.irfftn(fft_input*kernel,s=input.shape[-3:])
+    return fft.irfftn(fft_input * kernel, s=input.shape[-3:])
+
+
+def high_pass_torch(input, limit):
+    pass1 = torch.abs(fft.rfftfreq(input.shape[-1])) > limit
+    pass2 = torch.abs(fft.fftfreq(input.shape[-2])) > limit
+    kernel = torch.outer(pass2, pass1).to(input)
+    fft_input = fft.rfftn(input)
+    return fft.irfftn(fft_input * kernel, s=input.shape[-3:])
+
 
 def train(config, model, logger):
     torch.backends.cudnn.deterministic = True
@@ -117,7 +127,11 @@ def train(config, model, logger):
 
     # * set scheduler strategy
     if config.use_scheduler:
-        scheduler = StepLR(optimizer, step_size=config.scheduler_step_size, gamma=config.scheduler_gamma)
+        scheduler = StepLR(
+            optimizer,
+            step_size=config.scheduler_step_size,
+            gamma=config.scheduler_gamma,
+        )
 
     # * load model
     if config.load_mode == 1:  # * load weights from checkpoint
@@ -162,11 +176,15 @@ def train(config, model, logger):
     iteration = elapsed_epochs * len(train_loader)
 
     epoch_tqdm = progress.add_task(description="[red]epoch progress", total=epochs)
-    batch_tqdm = progress.add_task(description="[blue]batch progress", total=len(train_loader))
+    batch_tqdm = progress.add_task(
+        description="[blue]batch progress", total=len(train_loader)
+    )
 
     accelerator = Accelerator()
     # * accelerate prepare
-    train_loader, model, optimizer, scheduler = accelerator.prepare(train_loader, model, optimizer, scheduler)
+    train_loader, model, optimizer, scheduler = accelerator.prepare(
+        train_loader, model, optimizer, scheduler
+    )
 
     progress.start()
     for epoch in range(1, epochs + 1):
@@ -195,10 +213,10 @@ def train(config, model, logger):
                 x = x.type(torch.FloatTensor).to(accelerator.device)
                 gt = gt.type(torch.FloatTensor).to(accelerator.device)
 
-                if config.network=="IS":
-                    high_x = high_pass_torch(x,0.04)
-                    low_x = low_pass_torch(x,0.04)
-                    pred,_ = model(x,low_x,high_x)
+                if config.network == "IS":
+                    high_x = high_pass_torch(x, 0.04)
+                    low_x = low_pass_torch(x, 0.04)
+                    pred, _ = model(x, low_x, high_x)
                 else:
                     pred = model(x)
                 mask = pred.argmax(dim=1, keepdim=True)  # * [bs,1,h,w,d]
@@ -274,7 +292,7 @@ def train(config, model, logger):
 
         # * one epoch logger
         logger.info(
-            f"\nEpoch {epoch} used time:  {load_meter.sum+train_time.sum:.3f} s\n"
+            f"\nEpoch {epoch} used time:  {load_meter.sum + train_time.sum:.3f} s\n"
             f"Loss Avg:  {loss_meter.avg}\n"
             f"Dice Avg:  {dice_meter.avg}\n"
         )
@@ -311,9 +329,9 @@ def train(config, model, logger):
 def main(config):
     config = config["config"]
     if isinstance(config.patch_size, str):
-        assert (
-            len(config.patch_size.split(",")) <= 3
-        ), f'patch size can only be one str or three str but got {len(config.patch_size.split(","))}'
+        assert len(config.patch_size.split(",")) <= 3, (
+            f"patch size can only be one str or three str but got {len(config.patch_size.split(','))}"
+        )
         if len(config.patch_size.split(",")) == 3:
             config.patch_size = tuple(map(int, config.patch_size.split(",")))
         else:
@@ -322,55 +340,71 @@ def main(config):
 
     # * model selection
     if config.network == "res_unet":
-        from models.three_d.residual_unet3d import UNet
+        from models.three_d.nets.residual_unet3d import UNet
 
-        model = UNet(in_channels=config.in_classes, n_classes=config.out_classes, base_n_filter=32)
+        model = UNet(
+            in_channels=config.in_classes,
+            n_classes=config.out_classes,
+            base_n_filter=32,
+        )
     elif config.network == "unet":
-        from models.three_d.unet3d import UNet3D  # * 3d unet
+        from models.three_d.nets.unet3d import UNet3D  # * 3d unet
 
-        model = UNet3D(in_channels=config.in_classes, out_channels=config.out_classes, init_features=32)
+        model = UNet3D(
+            in_channels=config.in_classes,
+            out_channels=config.out_classes,
+            init_features=32,
+        )
     elif config.network == "er_net":
-        from models.three_d.ER_net import ER_Net
+        from models.three_d.nets.ER_net import ER_Net
 
         model = ER_Net(classes=config.out_classes, channels=config.in_classes)
     elif config.network == "re_net":
-        from models.three_d.RE_net import RE_Net
+        from models.three_d.nets.RE_net import RE_Net
 
         model = RE_Net()
     elif config.network == "IS":
-        from models.three_d.IS import UNet3D
+        from models.three_d.nets.IS import UNet3D
 
-        model = UNet3D(in_channels=config.in_classes, out_channels=config.out_classes,init_features=32)
+        model = UNet3D(
+            in_channels=config.in_classes,
+            out_channels=config.out_classes,
+            init_features=32,
+        )
 
     elif config.network == "unetr":
-        from models.three_d.unetr import UNETR
+        from models.three_d.nets.unetr import UNETR
 
         model = UNETR()
     elif config.network == "densenet":
-        from models.three_d.densenet3d import SkipDenseNet3D
+        from models.three_d.nets.densenet3d import SkipDenseNet3D
 
-        model = SkipDenseNet3D(in_channels=config.in_classes, classes=config.out_classes)
+        model = SkipDenseNet3D(
+            in_channels=config.in_classes, classes=config.out_classes
+        )
 
     elif config.network == "vtnet":
-        from models.three_d.vtnet import VTUNet
+        from models.three_d.nets.vtnet import VTUNet
 
         model = VTUNet(num_classes=config.out_classes, input_dim=config.in_classes)
     elif config.network == "vnet":
-        from models.three_d.vnet3d import VNet
+        from models.three_d.nets.vnet3d import VNet
 
         model = VNet(in_channels=config.in_classes, classes=config.out_classes)
     elif config.network == "densevoxelnet":
-        from models.three_d.densevoxelnet3d import DenseVoxelNet
+        from models.three_d.nets.densevoxelnet3d import DenseVoxelNet
 
         model = DenseVoxelNet(in_channels=config.in_classes, classes=config.out_classes)
     elif config.network == "csrnet":
-        from models.three_d.csrnet import CSRNet
+        from models.three_d.nets.csrnet import CSRNet
 
         model = CSRNet(in_channels=config.in_classes, out_channels=config.out_classes)
     elif config.network == "dunet":
-        from models.three_d.Double_Unet import Double_Unet
+        from models.three_d.nets.Double_Unet import Double_Unet
 
-        model = Double_Unet(in_channels=config.in_classes, out_channels=config.out_classes)
+        model = Double_Unet(
+            in_channels=config.in_classes, out_channels=config.out_classes
+        )
     model.apply(weights_init_normal(config.init_type))
 
     # * create logger

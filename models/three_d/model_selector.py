@@ -3,23 +3,23 @@ import os
 from typing import Dict, Any, Optional
 
 # 导入所有模型
-from .vc_net import get_vc_net
-from .vnet3d import VNet
-from .csrnet import CSRNet
-from .highresnet import HighResNet
-from .stdc2d_v2 import ProjectionSegNet
-from .ER_net import ER_Net
-from .densevoxelnet3d import DenseVoxelNet
+from .nets.vc_net import get_vc_net
+from .nets.vnet3d import VNet
+from .nets.csrnet import CSRNet
+from .nets.highresnet import HighResNet
+from .nets.stdc2d_v2 import ProjectionSegNet
+from .nets.ER_net import ER_Net
+from .nets.densevoxelnet3d import DenseVoxelNet
 
 # from .fcn3d import FCN3D
 # from .FusionNet import FusionNet
-from .RE_net import RE_Net
-from .densenet3d import SkipDenseNet3D
-from .unetr import UNETR
+from .nets.RE_net import RE_Net
+from .nets.densenet3d import SkipDenseNet3D
+from .nets.unetr import UNETR
 
 # from .vtnet import VTUNet
-from .residual_unet3d import UNet as ResidualUNet3D
-from .unet3d import UNet3D
+from .nets.residual_unet3d import UNet as ResidualUNet3D
+from .nets.unet3d import UNet3D
 from .pl_models import BaseModel, TriPlaneModel
 # from .vt_unet import
 

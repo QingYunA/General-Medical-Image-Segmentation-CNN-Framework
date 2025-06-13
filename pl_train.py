@@ -33,7 +33,7 @@ def main(config):
         default_root_dir=config.hydra_path,
     )
 
-    dataset = MhdDataset(**config.data, is_train=True, fast_mode=True)
+    dataset = MhdDataset(**config.data, is_train=True, fast_mode=False)
     dataloader = dataset.dataloader
     model = select_model(
         model_name, model_params=config.model, pl_model_params=config.pl_models

@@ -74,7 +74,10 @@ class BaseModel(L.LightningModule):
         self.use_scheduler = use_scheduler
         self.lr_step_size = lr_step_size
         self.lr_gamma = lr_gamma
-        # self.dice_loss = DiceLoss(include_background=True, to_onehot_y=True, softmax=True)
+        self.dice_loss = DiceLoss(
+            include_background=True, to_onehot_y=True, softmax=True
+        )
+        self.bce_loss = nn.BCEWithLogitsLoss()
         self.dice_ce_loss = DiceCELoss(
             include_background=True, to_onehot_y=True, softmax=True
         )
@@ -277,8 +280,9 @@ class TriPlaneModel(BaseModel):
             seg_dec2 = seg_dec2 * (m_dec2 > 0)
             seg_dec1 = seg_dec1 * (m_dec1 > 0)
 
-        seg_2d_loss = self.dice_ce_loss(pred, y)
-        seg_3d_loss = self.dice_ce_loss(seg_pred, y)
+        seg_2d_loss = self.bce_loss(pred, y) + self.dice_loss(pred, y)
+        seg_3d_loss = self.bce_loss(seg_pred, y) + self.dice_loss(seg_pred, y)
+        # seg_3d_loss = self.dice_ce_loss(seg_pred, y)
         dec4_loss = self.mse_loss(m_dec4, seg_dec4)
         dec3_loss = self.mse_loss(m_dec3, seg_dec3)
         dec2_loss = self.mse_loss(m_dec2, seg_dec2)
@@ -294,7 +298,6 @@ class TriPlaneModel(BaseModel):
         )
         self.log("train/loss", loss.item(), on_step=True, on_epoch=False, prog_bar=True)
 
-        # mask = torch.argmax(pred, dim=1, keepdim=True)
         mask = torch.sigmoid(pred.clone())
         mask[mask > self.THRESHOLD] = 1
         mask[mask <= self.THRESHOLD] = 0

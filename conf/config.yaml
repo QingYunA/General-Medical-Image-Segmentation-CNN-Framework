@@ -28,11 +28,6 @@ config:
     neg_ratio: 0 # negative ratio
     cache: True
     cache_rate: 1
-  trainer:
-    benchmark: True
-    devices: [1]
-    accelerator: "auto"
-    max_epochs: 100
   pl_models:
     lr: 0.01
     patch_size: [64, 64, 64]
@@ -43,6 +38,12 @@ config:
     use_scheduler: True
     lr_step_size: 20
     lr_gamma: 0.8
+  trainer:
+    benchmark: True
+    devices: [1]
+    accelerator: "auto"
+    max_epochs: 100
+
   job_name: ${hydra:job.name}
   hydra_path: ${hydra:runtime.output_dir}
 
